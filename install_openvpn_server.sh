@@ -26,6 +26,12 @@ if [ $PROFILE_SHELL != "bash" ]; then
   exit
 fi
 
+if [ "$(id -u)" != "0" ]; then
+  echo "Running this script as root."
+  sudo su -c "bash $SCRIPT_FILENAME"
+  exit
+fi
+
 # Print initialization messages
 
 echo "This script will create an OpenVPN tunnel called 'server'."

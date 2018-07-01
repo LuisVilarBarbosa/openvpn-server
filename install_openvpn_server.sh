@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/bash
 
 # Originally based on https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-ubuntu-18-04
 
@@ -165,6 +165,9 @@ fi
 perl -i -p -e "s|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|" /etc/sysctl.conf
 sysctl -p
 BEFORE_RULES=$(cat $INITIAL_PWD/before.rules)
+INTERFACE=$(ip route | grep default | grep -P 'dev \w+' -o) # -P means Perl-style and -o means match only (Based on https://stackoverflow.com/questions/3320416/how-to-extract-a-value-from-a-string-using-regex-and-a-shell)
+INTERFACE_ARRAY=($INTERFACE)
+BEFORE_RULES=$(echo $BEFORE_RULES | sed "s|eth0|${INTERFACE_ARRAY[1]}|g")
 perl -i -p -e "s|# Don't delete these required lines, otherwise there will be errors|$BEFORE_RULES\n\n# Don't delete these required lines, otherwise there will be errors|" /etc/ufw/before.rules
 perl -i -p -e "s|DEFAULT_FORWARD_POLICY=\"DROP\"|DEFAULT_FORWARD_POLICY=\"ACCEPT\"|" /etc/default/ufw
 ufw $FIREWALL_MODE $SERVER_PORT/$SERVER_PROTOCOL

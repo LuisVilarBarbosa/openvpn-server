@@ -197,6 +197,7 @@ chmod 700 $INSTALLATION_DIR/client-configs/make_config.sh
 # Step 9 — Generating Client Configurations
 cd $INSTALLATION_DIR/client-configs
 ./make_config.sh client1
+perl -i -p -e "s|client\n|client\nsetenv opt block-outside-dns\n|" $INSTALLATION_DIR/client-configs/files/client1.ovpn
 
 # Undoing changes to the terminal status
 cd $INITIAL_PWD

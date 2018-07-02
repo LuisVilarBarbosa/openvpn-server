@@ -2,6 +2,8 @@
 
 # Originally based on https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-ubuntu-18-04
 
+SCRIPT_FILENAME=$0
+
 # Verify which shell is running this script
 
 ## Based on https://unix.stackexchange.com/questions/71121/determine-shell-in-script-during-runtime
@@ -21,10 +23,11 @@ fi
 
 if [ $PROFILE_SHELL != "bash" ]; then
   echo "Changing to Bash shell."
-  SCRIPT_FILENAME=$0
   sudo su -c "bash $SCRIPT_FILENAME"
   exit
 fi
+
+# Verify if this script is running as root
 
 if [ "$(id -u)" != "0" ]; then
   echo "Running this script as root."
@@ -155,26 +158,27 @@ perl -i -p -e "s|;user nobody|user nobody|" /etc/openvpn/server.conf
 perl -i -p -e "s|;group nogroup|group nogroup|" /etc/openvpn/server.conf
 
 ## (Optional) Push DNS Changes to Redirect All Traffic Through the VPN
-perl -i -p -e "s|;push \"redirect-gateway def1 bypass-dhcp\"|push \"redirect-gateway def1 bypass-dhcp bypass-dns\"\n|" /etc/openvpn/server.conf
+perl -i -p -e "s|;push \"redirect-gateway def1 bypass-dhcp\"|push \"redirect-gateway def1 bypass-dhcp bypass-dns\"|" /etc/openvpn/server.conf
 perl -i -p -e "s|;push \"dhcp-option DNS 208.67.222.222\"|push \"dhcp-option DNS 208.67.222.222\"|" /etc/openvpn/server.conf
 perl -i -p -e "s|;push \"dhcp-option DNS 208.67.220.220\"|push \"dhcp-option DNS 208.67.220.220\"|" /etc/openvpn/server.conf
 
 ## (Optional) Adjust the Port and Protocol
 perl -i -p -e "s|port 1194|port $SERVER_PORT|" /etc/openvpn/server.conf
+perl -i -p -e "s|;proto tcp\n||" /etc/openvpn/server.conf
 perl -i -p -e "s|proto udp|proto $SERVER_PROTOCOL|" /etc/openvpn/server.conf
-PROTO=$(cat /etc/openvpn/server.conf | grep proto)
-if [[ $PROTO =~ ^((?!;)proto tcp) ]]; then  # TODO: fix this if statement
-    perl -i -p -e "s|explicit-exit-notify 1|explicit-exit-notify 0|" /etc/openvpn/server.conf;
+if [[ $SERVER_PROTOCOL == "tcp" ]]; then
+    perl -i -p -e "s|explicit-exit-notify 1|explicit-exit-notify 0|" /etc/openvpn/server.conf
 fi
 
 # Step 6 — Adjusting the Server Networking Configuration
 perl -i -p -e "s|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|" /etc/sysctl.conf
 sysctl -p
-BEFORE_RULES=$(cat $INITIAL_PWD/before.rules)
+cp $INITIAL_PWD/before.rules $INSTALLATION_DIR/
 INTERFACE=$(ip route | grep default | grep -P 'dev \w+' -o) # -P means Perl-style and -o means match only (Based on https://stackoverflow.com/questions/3320416/how-to-extract-a-value-from-a-string-using-regex-and-a-shell)
 INTERFACE_ARRAY=($INTERFACE)
-BEFORE_RULES=$(echo $BEFORE_RULES | sed "s|eth0|${INTERFACE_ARRAY[1]}|g")
-perl -i -p -e "s|# Don't delete these required lines, otherwise there will be errors|$BEFORE_RULES\n\n# Don't delete these required lines, otherwise there will be errors|" /etc/ufw/before.rules
+perl -i -p -e "s|eth0|${INTERFACE_ARRAY[1]}|" $INSTALLATION_DIR/before.rules
+perl -i -p -e "s|# Don't delete these required lines, otherwise there will be errors|$(cat $INSTALLATION_DIR/before.rules)\n\n# Don't delete these required lines, otherwise there will be errors|" /etc/ufw/before.rules
+rm $INSTALLATION_DIR/before.rules
 perl -i -p -e "s|DEFAULT_FORWARD_POLICY=\"DROP\"|DEFAULT_FORWARD_POLICY=\"ACCEPT\"|" /etc/default/ufw
 ufw $FIREWALL_MODE $SERVER_PORT/$SERVER_PROTOCOL
 ufw $FIREWALL_MODE OpenSSH

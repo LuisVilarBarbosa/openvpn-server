@@ -207,7 +207,9 @@ cp $INITIAL_PWD/before.rules $INSTALLATION_DIR/
 INTERFACE=$(ip route | grep default | grep -P 'dev \w+' -o) # -P means Perl-style and -o means match only (Based on https://stackoverflow.com/questions/3320416/how-to-extract-a-value-from-a-string-using-regex-and-a-shell)
 INTERFACE_ARRAY=($INTERFACE)
 perl -i -p -e "s|eth0|${INTERFACE_ARRAY[1]}|" $INSTALLATION_DIR/before.rules
-perl -i -p -e "s|# Don't delete these required lines, otherwise there will be errors|$(cat $INSTALLATION_DIR/before.rules)\n\n# Don't delete these required lines, otherwise there will be errors|" /etc/ufw/before.rules
+if ! grep -qF "$(cat $INSTALLATION_DIR/before.rules)" /etc/ufw/before.rules; then  # if the data inside $INSTALLATION_DIR/before.rules is not inside /etc/ufw/before.rules
+  perl -i -p -e "s|# Don't delete these required lines, otherwise there will be errors|$(cat $INSTALLATION_DIR/before.rules)\n\n# Don't delete these required lines, otherwise there will be errors|" /etc/ufw/before.rules
+fi
 rm $INSTALLATION_DIR/before.rules
 perl -i -p -e "s|DEFAULT_FORWARD_POLICY=\"DROP\"|DEFAULT_FORWARD_POLICY=\"ACCEPT\"|" /etc/default/ufw
 ufw $FIREWALL_MODE $SERVER_PORT/$SERVER_PROTOCOL

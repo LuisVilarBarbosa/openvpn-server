@@ -48,72 +48,49 @@ INITIAL_PWD=$(pwd)
 INSTALLATION_DIR="/openvpn_instalation"  # This variable is repeated on 'make_config.sh'
 mkdir -p $INSTALLATION_DIR
 
-while true; do
-  echo "Which name you want to give to the OpenVPN server? 'server' is the default."
-  read -r SERVER_NAME
-  if [[ $SERVER_NAME =~ ^([a-zA-Z0-9_-]+)$ ]]; then
-    break
-  else
-    echo "Invalid name. Please, do not use spaces or special characters."
-  fi
-done
+cp $INITIAL_PWD/configuration_variables.sh $INSTALLATION_DIR
+echo "Please update the variables inside 'configuration_variables.sh'."
+echo "Press enter to perform the manual update."
+read -r DUMMY_VAR
+nano $INSTALLATION_DIR/configuration_variables.sh
+source $INSTALLATION_DIR/configuration_variables.sh
 
-while true; do
-  echo "What is your server DNS name or IP?"
-  read -r SERVER_ADDRESS
-  #if [[ $SERVER_ADDRESS =~ ^(\w+(\.\w+)*)$ || $SERVER_ADDRESS =~ ^(\d{1,3}(\.\d{1,3}){3})$ || $SERVER_ADDRESS =~ ^(\w{4}(:\w{4}){4})$ ]]; then  # TODO: implement this verification
-    break
-  #else
-  #  echo "Invalid address. It should be a DNS name, an IPv4 address or an IPv6 address."
-  #fi
-done
+if [[ ! $SERVER_NAME =~ ^([a-zA-Z0-9_-]+)$ ]]; then
+  echo "Invalid name: $SERVER_NAME"
+  echo "Please, do not use spaces or special characters."
+  exit
+fi
 
-while true; do
-  echo "Which port do you want to use for the OpenVPN server? 1194 is the default port. Be sure that the port is not in use."
-  read -r SERVER_PORT
-  MIN_PORT=0
-  MAX_PORT=65535
-  if [[ $SERVER_PORT =~ ^([0-9]{1,5})$ && $SERVER_PORT -ge $MIN_PORT && $SERVER_PORT -le $MAX_PORT ]]; then
-    break
-  else
-    echo "Invalid port. It should be between $MIN_PORT and $MAX_PORT."
-  fi
-done
+#if [[ ! $SERVER_ADDRESS =~ ^(\w+(\.\w+)*)$ || ! $SERVER_ADDRESS =~ ^(\d{1,3}(\.\d{1,3}){3})$ || ! $SERVER_ADDRESS =~ ^(\w{4}(:\w{4}){4})$ ]]; then  # TODO: implement this verification
+#  echo "Invalid address: $SERVER_ADDRESS"
+#  echo "It should be a DNS name, an IPv4 address or an IPv6 address."
+#fi
 
-while true; do
-  echo "Which protocol do you want to use for the OpenVPN server (UDP or TCP)? UDP is the default protocol."
-  read -r SERVER_PROTOCOL
-  SERVER_PROTOCOL=${SERVER_PROTOCOL,,} # Changes all characters to lowercase
-  if [[ $SERVER_PROTOCOL =~ ^(udp|tcp)$ ]]; then
-    break
-  else
-    echo "Invalid protocol."
-  fi
-done
+MIN_PORT=0
+MAX_PORT=65535
+if [[ ! $SERVER_PORT =~ ^([0-9]{1,5})$ || ! $SERVER_PORT -ge $MIN_PORT || ! $SERVER_PORT -le $MAX_PORT ]]; then
+  echo "Invalid port: $SERVER_PORT"
+  echo "It should be between $MIN_PORT and $MAX_PORT."
+  exit
+fi
 
-while true; do
-  echo "Which mode do you want to use to open access to OpenSSH and OpenVPN servers ('limit' or 'allow')?"
-  echo "'limit' protects the machine, but 'allow' is better when there are multiple connections in a short amount of time."
-  read -r FIREWALL_MODE
-  FIREWALL_MODE=${FIREWALL_MODE,,} # Changes all characters to lowercase
-  if [[ $FIREWALL_MODE =~ ^(limit|allow)$ ]]; then
-    break
-  else
-    echo "Invalid mode."
-  fi
-done
+SERVER_PROTOCOL=${SERVER_PROTOCOL,,} # Changes all characters to lowercase
+if [[ ! $SERVER_PROTOCOL =~ ^(udp|tcp)$ ]]; then
+  echo "Invalid protocol: $SERVER_PROTOCOL"
+  exit
+fi
 
-echo "Let's indicate the OpenVPN clients... (press enter on an empty line to stop indicating clients)"
-for (( i=1; 1; )); do
-  echo "Which name you want to give to the OpenVPN client $i? 'client$i' is the default."
-  read -r CLIENTS_ARRAY[$i]
-  if [[ ${CLIENTS_ARRAY[$i]} =~ ^$ ]]; then
-    unset ${CLIENTS_ARRAY[$i]}
-    break
-  elif [[ ${CLIENTS_ARRAY[$i]} =~ ^([a-zA-Z0-9_-]+)$ ]]; then
-    i=$((i+1))
-  else
-    echo "Invalid name. Please, do not use spaces or special characters."
+FIREWALL_MODE=${FIREWALL_MODE,,} # Changes all characters to lowercase
+if [[ ! $FIREWALL_MODE =~ ^(limit|allow)$ ]]; then
+  echo "Invalid mode: $FIREWALL_MODE"
+  exit
+fi
+
+for client in ${CLIENTS_ARRAY[*]}; do
+  if [[ ! $client =~ ^([a-zA-Z0-9_-]+)$ ]]; then
+    echo "Invalid name: $client"
+    echo "Please, do not use spaces or special characters."
+    exit
   fi
 done
 

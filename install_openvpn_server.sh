@@ -37,9 +37,9 @@ fi
 
 # Print initialization messages
 
-echo "This script will create an OpenVPN tunnel called 'server'."
+echo "This script will create an OpenVPN tunnel."
 echo "Pay attention to the output for errors or warnings."
-echo "Replace an already existing server will not work correctly."
+echo "Trying to replace an already existing server with the same name will not work correctly. The client configuration files of the original server would work and the ones for the new server would not work."
 echo "Press enter to continue..."
 read -r DUMMY_VAR
 
@@ -47,6 +47,16 @@ read -r DUMMY_VAR
 INITIAL_PWD=$(pwd)
 INSTALLATION_DIR="/openvpn_instalation"  # This variable is repeated on 'make_config.sh'
 mkdir -p $INSTALLATION_DIR
+
+while true; do
+  echo "Which name you want to give to the OpenVPN server? 'server' is the default."
+  read -r SERVER_NAME
+  if [[ $SERVER_NAME =~ ^([a-zA-Z0-9_-]+)$ ]]; then
+    break
+  else
+    echo "Invalid name. Please, do not use spaces or special characters."
+  fi
+done
 
 while true; do
   echo "What is your server DNS name or IP?"
@@ -59,7 +69,7 @@ while true; do
 done
 
 while true; do
-  echo "Which port do you want to use for the OpenVPN server? 1194 is the default port."
+  echo "Which port do you want to use for the OpenVPN server? 1194 is the default port. Be sure that the port is not in use."
   read -r SERVER_PORT
   MIN_PORT=0
   MAX_PORT=65535
@@ -90,6 +100,20 @@ while true; do
     break
   else
     echo "Invalid mode."
+  fi
+done
+
+echo "Let's indicate the OpenVPN clients... (press enter on an empty line to stop indicating clients)"
+for (( i=1; 1; )); do
+  echo "Which name you want to give to the OpenVPN client $i? 'client$i' is the default."
+  read -r CLIENTS_ARRAY[$i]
+  if [[ ${CLIENTS_ARRAY[$i]} =~ ^$ ]]; then
+    unset ${CLIENTS_ARRAY[$i]}
+    break
+  elif [[ ${CLIENTS_ARRAY[$i]} =~ ^([a-zA-Z0-9_-]+)$ ]]; then
+    i=$((i+1))
+  else
+    echo "Invalid name. Please, do not use spaces or special characters."
   fi
 done
 
@@ -126,12 +150,12 @@ echo "" | ./easyrsa build-ca nopass
 
 # Step 3 — Creating the Server Certificate, Key, and Encryption Files
 cd $INSTALLATION_DIR/EasyRSA-3.0.4/
-echo "" | ./easyrsa gen-req server nopass
-cp $INSTALLATION_DIR/EasyRSA-3.0.4/pki/private/server.key /etc/openvpn/
-echo "yes" | ./easyrsa sign-req server server
-cp pki/issued/server.crt /tmp
+echo "" | ./easyrsa gen-req $SERVER_NAME nopass
+cp $INSTALLATION_DIR/EasyRSA-3.0.4/pki/private/$SERVER_NAME.key /etc/openvpn/
+echo "yes" | ./easyrsa sign-req server $SERVER_NAME
+cp pki/issued/$SERVER_NAME.crt /tmp
 cp pki/ca.crt /tmp
-cp /tmp/{server.crt,ca.crt} /etc/openvpn/
+cp /tmp/{$SERVER_NAME.crt,ca.crt} /etc/openvpn/
 ./easyrsa gen-dh
 openvpn --genkey --secret ta.key
 cp $INSTALLATION_DIR/EasyRSA-3.0.4/ta.key /etc/openvpn/
@@ -141,34 +165,40 @@ cp $INSTALLATION_DIR/EasyRSA-3.0.4/pki/dh.pem /etc/openvpn/
 mkdir -p $INSTALLATION_DIR/client-configs/keys
 chmod -R 700 $INSTALLATION_DIR/client-configs
 cd $INSTALLATION_DIR/EasyRSA-3.0.4/
-echo "" | ./easyrsa gen-req client1 nopass
-cp pki/private/client1.key $INSTALLATION_DIR/client-configs/keys/
-echo "yes" | ./easyrsa sign-req client client1
-cp pki/issued/client1.crt $INSTALLATION_DIR/client-configs/keys/
+for client in ${CLIENTS_ARRAY[*]}; do
+  echo "" | ./easyrsa gen-req $client nopass
+  cp pki/private/$client.key $INSTALLATION_DIR/client-configs/keys/
+  echo "yes" | ./easyrsa sign-req client $client
+  cp pki/issued/$client.crt $INSTALLATION_DIR/client-configs/keys/
+done
 cp $INSTALLATION_DIR/EasyRSA-3.0.4/ta.key $INSTALLATION_DIR/client-configs/keys/
 cp /etc/openvpn/ca.crt $INSTALLATION_DIR/client-configs/keys/
 
 # Step 5 — Configuring the OpenVPN Service
-cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz /etc/openvpn/
-gzip -d /etc/openvpn/server.conf.gz
-perl -i -p -e "s|tls-auth ta.key 0 # This file is secret|tls-auth ta.key 0 # This file is secret\nkey-direction 0|" /etc/openvpn/server.conf
-perl -i -p -e "s|cipher AES-256-CBC|cipher AES-256-CBC\nauth SHA256|" /etc/openvpn/server.conf
-perl -i -p -e "s|dh dh2048.pem|dh dh.pem|" /etc/openvpn/server.conf
-perl -i -p -e "s|;user nobody|user nobody|" /etc/openvpn/server.conf
-perl -i -p -e "s|;group nogroup|group nogroup|" /etc/openvpn/server.conf
+cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz /etc/openvpn/$SERVER_NAME.conf.gz
+gzip -d /etc/openvpn/$SERVER_NAME.conf.gz
+perl -i -p -e "s|tls-auth ta.key 0 # This file is secret|tls-auth ta.key 0 # This file is secret\nkey-direction 0|" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|cipher AES-256-CBC|cipher AES-256-CBC\nauth SHA256|" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|dh dh2048.pem|dh dh.pem|" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|;user nobody|user nobody|" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|;group nogroup|group nogroup|" /etc/openvpn/$SERVER_NAME.conf
 
 ## (Optional) Push DNS Changes to Redirect All Traffic Through the VPN
-perl -i -p -e "s|;push \"redirect-gateway def1 bypass-dhcp\"|push \"redirect-gateway def1 bypass-dhcp bypass-dns\"|" /etc/openvpn/server.conf
-perl -i -p -e "s|;push \"dhcp-option DNS 208.67.222.222\"|push \"dhcp-option DNS 208.67.222.222\"|" /etc/openvpn/server.conf
-perl -i -p -e "s|;push \"dhcp-option DNS 208.67.220.220\"|push \"dhcp-option DNS 208.67.220.220\"|" /etc/openvpn/server.conf
+perl -i -p -e "s|;push \"redirect-gateway def1 bypass-dhcp\"|push \"redirect-gateway def1 bypass-dhcp bypass-dns\"|" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|;push \"dhcp-option DNS 208.67.222.222\"|push \"dhcp-option DNS 208.67.222.222\"|" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|;push \"dhcp-option DNS 208.67.220.220\"|push \"dhcp-option DNS 208.67.220.220\"|" /etc/openvpn/$SERVER_NAME.conf
 
 ## (Optional) Adjust the Port and Protocol
-perl -i -p -e "s|port 1194|port $SERVER_PORT|" /etc/openvpn/server.conf
-perl -i -p -e "s|;proto tcp\n||" /etc/openvpn/server.conf
-perl -i -p -e "s|proto udp|proto $SERVER_PROTOCOL|" /etc/openvpn/server.conf
+perl -i -p -e "s|port 1194|port $SERVER_PORT|" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|;proto tcp\n||" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|proto udp|proto $SERVER_PROTOCOL|" /etc/openvpn/$SERVER_NAME.conf
 if [[ $SERVER_PROTOCOL == "tcp" ]]; then
-    perl -i -p -e "s|explicit-exit-notify 1|explicit-exit-notify 0|" /etc/openvpn/server.conf
+    perl -i -p -e "s|explicit-exit-notify 1|explicit-exit-notify 0|" /etc/openvpn/$SERVER_NAME.conf
 fi
+
+## (Optional) Point to Non-Default Credentials
+perl -i -p -e "s|cert server.crt|cert $SERVER_NAME.crt|" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|key server.key|key $SERVER_NAME.key|" /etc/openvpn/$SERVER_NAME.conf
 
 # Step 6 — Adjusting the Server Networking Configuration
 perl -i -p -e "s|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|" /etc/sysctl.conf
@@ -186,8 +216,8 @@ ufw disable
 echo "yes" | ufw enable
 
 # Step 7 — Starting and Enabling the OpenVPN Service
-systemctl start openvpn@server
-systemctl enable openvpn@server
+systemctl start openvpn@$SERVER_NAME
+systemctl enable openvpn@$SERVER_NAME
 
 # Step 8 — Creating the Client Configuration Infrastructure
 mkdir -p $INSTALLATION_DIR/client-configs/files
@@ -206,8 +236,10 @@ chmod 700 $INSTALLATION_DIR/client-configs/make_config.sh
 
 # Step 9 — Generating Client Configurations
 cd $INSTALLATION_DIR/client-configs
-./make_config.sh client1
-perl -i -p -e "s|client\n|client\nsetenv opt block-outside-dns\n|" $INSTALLATION_DIR/client-configs/files/client1.ovpn
+for client in ${CLIENTS_ARRAY[*]}; do
+  ./make_config.sh $client
+  perl -i -p -e "s|client\n|client\nsetenv opt block-outside-dns\n|" $INSTALLATION_DIR/client-configs/files/$client.ovpn
+done
 
 # Undoing changes to the terminal status
 cd $INITIAL_PWD
@@ -215,11 +247,11 @@ cd $INITIAL_PWD
 # Print informational messages
 echo ""
 echo ""
-echo "The client configuration file is placed on '$INSTALLATION_DIR/client-configs/files/client1.ovpn'."
-echo "You may want to uncomment the following lines on '$INSTALLATION_DIR/client-configs/files/client1.ovpn' if you are using a Linux client:"
+echo "The client configuration files are placed on '$INSTALLATION_DIR/client-configs/files/'."
+echo "You may want to uncomment the following lines on some of your client configuration files if you are using some Linux client:"
 echo "# script-security 2                    --> script-security 2"
 echo "# up /etc/openvpn/update-resolv-conf   --> up /etc/openvpn/update-resolv-conf"
 echo "# down /etc/openvpn/update-resolv-conf --> down /etc/openvpn/update-resolv-conf"
 echo ""
 echo ""
-systemctl status openvpn@server
+systemctl status openvpn@$SERVER_NAME

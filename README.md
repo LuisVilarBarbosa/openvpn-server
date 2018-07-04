@@ -8,9 +8,9 @@ This configuration is useful to create an OpenVPN server on hardware like a Rasp
 
 Be free to change this configuration to suit your needs and give suggestions or indicate issues.
 
-To verify if everything is working, access /var/log/syslog and look at the messages written by "ovpn-server".
+To verify if everything is working, access /var/log/syslog and look at the messages written by "ovpn-*name_given_to_server*".
 
-This configuration has been tested on Ubuntu Server 18.04, Debian Stretch 9.4.0 and Raspbian Stretch 9.4.
+This configuration has been tested with success on Ubuntu Server 18.04, Debian Stretch 9.4.0 and Raspbian Stretch 9.4.
 
 This configuration is originally based on:
 - https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-ubuntu-18-04

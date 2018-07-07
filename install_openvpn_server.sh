@@ -80,6 +80,40 @@ if [[ ! $SERVER_PROTOCOL =~ ^(udp|tcp)$ ]]; then
   exit
 fi
 
+if [[ ! $OPENVPN_SUBNET =~ ^([0-9]{1,3}(\.[0-9]{1,3}){3})$ ]]; then
+  echo "Invalid subnet: $OPENVPN_SUBNET"
+  exit
+fi
+
+if [[ ! $OPENVPN_SUBNET_MASK =~ ^([0-9]{1,3}(\.[0-9]{1,3}){3})$ ]]; then
+  echo "Invalid subnet mask: $OPENVPN_SUBNET_MASK"
+  exit
+fi
+
+if [[ ! $BYPASS_DNS =~ ^(yes|no)$ ]]; then
+  echo "Invalid 'bypass-dns' option: $BYPASS_DNS"
+  exit
+fi
+
+for dns_server in ${DNS_SERVERS_ARRAY[*]}; do
+  if [[ ! $dns_server =~ ^([0-9]{1,3}(\.[0-9]{1,3}){3})$ && ! $dns_server =~ ^([0-9a-fA-F]{4}(:[0-9a-fA-F]{4}){4})$ ]]; then
+    echo "Invalid DNS server: $dns_server"
+    exit
+  fi
+done
+
+ALLOW_CLIENT_TO_CLIENT=${ALLOW_CLIENT_TO_CLIENT,,} # Changes all characters to lowercase
+if [[ ! $ALLOW_CLIENT_TO_CLIENT =~ ^(yes|no)$ ]]; then
+  echo "Invalid 'client-to-client' option: $ALLOW_CLIENT_TO_CLIENT"
+  exit
+fi
+
+ALLOW_DUPLICATE_CN=${ALLOW_DUPLICATE_CN,,} # Changes all characters to lowercase
+if [[ ! $ALLOW_DUPLICATE_CN =~ ^(yes|no)$ ]]; then
+  echo "Invalid 'duplicate-cn' option: $ALLOW_DUPLICATE_CN"
+  exit
+fi
+
 FIREWALL_MODE=${FIREWALL_MODE,,} # Changes all characters to lowercase
 if [[ ! $FIREWALL_MODE =~ ^(limit|allow)$ ]]; then
   echo "Invalid mode: $FIREWALL_MODE"
@@ -161,9 +195,18 @@ perl -i -p -e "s|;user nobody|user nobody|" /etc/openvpn/$SERVER_NAME.conf
 perl -i -p -e "s|;group nogroup|group nogroup|" /etc/openvpn/$SERVER_NAME.conf
 
 ## (Optional) Push DNS Changes to Redirect All Traffic Through the VPN
-perl -i -p -e "s|;push \"redirect-gateway def1 bypass-dhcp\"|push \"redirect-gateway def1 bypass-dhcp bypass-dns\"|" /etc/openvpn/$SERVER_NAME.conf
-perl -i -p -e "s|;push \"dhcp-option DNS 208.67.222.222\"|push \"dhcp-option DNS 208.67.222.222\"|" /etc/openvpn/$SERVER_NAME.conf
-perl -i -p -e "s|;push \"dhcp-option DNS 208.67.220.220\"|push \"dhcp-option DNS 208.67.220.220\"|" /etc/openvpn/$SERVER_NAME.conf
+if [[ $BYPASS_DNS == "yes" ]]; then
+  perl -i -p -e "s|;push \"redirect-gateway def1 bypass-dhcp\"|push \"redirect-gateway def1 bypass-dhcp bypass-dns\"|" /etc/openvpn/$SERVER_NAME.conf
+elif [[ $BYPASS_DNS == "no" ]]; then
+  perl -i -p -e "s|;push \"redirect-gateway def1 bypass-dhcp\"|push \"redirect-gateway def1 bypass-dhcp\"|" /etc/openvpn/$SERVER_NAME.conf
+fi
+DHCP_OPTION_DNS_FULL=""
+for dns_server in ${DNS_SERVERS_ARRAY[*]}; do
+  DHCP_OPTION_DNS_PART="push \"dhcp-option DNS $dns_server\"\n"
+  DHCP_OPTION_DNS_FULL="$DHCP_OPTION_DNS_FULL$DHCP_OPTION_DNS_PART"
+done
+perl -i -p -e "s|;push \"dhcp-option DNS 208.67.222.222\"\n||" /etc/openvpn/$SERVER_NAME.conf
+perl -i -p -e "s|;push \"dhcp-option DNS 208.67.220.220\"\n|$DHCP_OPTION_DNS_FULL|" /etc/openvpn/$SERVER_NAME.conf
 
 ## (Optional) Adjust the Port and Protocol
 perl -i -p -e "s|port 1194|port $SERVER_PORT|" /etc/openvpn/$SERVER_NAME.conf
@@ -176,6 +219,15 @@ fi
 ## (Optional) Point to Non-Default Credentials
 perl -i -p -e "s|cert server.crt|cert $SERVER_NAME.crt|" /etc/openvpn/$SERVER_NAME.conf
 perl -i -p -e "s|key server.key|key $SERVER_NAME.key|" /etc/openvpn/$SERVER_NAME.conf
+
+## Some of the extra adjustments not indicated in the Digital Ocean tutorial
+perl -i -p -e "s|server 10.8.0.0 255.255.255.0|server $OPENVPN_SUBNET $OPENVPN_SUBNET_MASK|" /etc/openvpn/$SERVER_NAME.conf
+if [[ $ALLOW_CLIENT_TO_CLIENT == "yes" ]]; then
+  perl -i -p -e "s|;client-to-client|client-to-client|" /etc/openvpn/$SERVER_NAME.conf
+fi
+if [[ $ALLOW_DUPLICATE_CN == "yes" ]]; then
+  perl -i -p -e "s|;duplicate-cn|duplicate-cn|" /etc/openvpn/$SERVER_NAME.conf
+fi
 
 # Step 6 — Adjusting the Server Networking Configuration
 perl -i -p -e "s|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|" /etc/sysctl.conf
@@ -217,7 +269,9 @@ chmod 700 $INSTALLATION_DIR/client-configs/make_config.sh
 cd $INSTALLATION_DIR/client-configs
 for client in ${CLIENTS_ARRAY[*]}; do
   ./make_config.sh $client
-  perl -i -p -e "s|client\n|client\nsetenv opt block-outside-dns\n|" $INSTALLATION_DIR/client-configs/files/$client.ovpn
+  if [[ $BYPASS_DNS == "yes" ]]; then
+    perl -i -p -e "s|client\n|client\nsetenv opt block-outside-dns\n|" $INSTALLATION_DIR/client-configs/files/$client.ovpn
+  fi
 done
 
 # Undoing changes to the terminal status

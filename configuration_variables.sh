@@ -29,6 +29,50 @@ SERVER_PORT="1194"
 # UDP or TCP.
 SERVER_PROTOCOL="udp"
 
+# The VPN subnet for OpenVPN to draw client addresses from.
+# The server will take the first IPv4 address for itself,
+# the rest will be made available to clients. Each client
+# will be able to reach the server using the first IPv4
+# address of the subnet.
+OPENVPN_SUBNET="10.8.0.0"
+OPENVPN_SUBNET_MASK="255.255.255.0"
+
+# The ability to block outside DNS servers on the client and
+# only allow those provided by the OpenVPN server.
+# Indicate 'yes' to block outside DNS servers or indicate 'no'
+# otherwise.
+BYPASS_DNS="yes"
+
+# The DNS servers provided to OpenVPN clients.
+# All the IP addresses must be inside the parenthesis and each
+# IP address must be inside quotation marks and separated from
+# the others by a space.
+# You can provide as many DNS servers you want. Two are already
+# defined for example purposes and refer to the public DNS
+# servers provided by opendns.com.
+DNS_SERVERS_ARRAY=("208.67.222.222" "208.67.220.220")
+
+# The ability for OpenVPN clients to "see" each other.
+# By default, clients will only see the server.
+# To force clients to only see the server, you will also need
+# to appropriately firewall the server's TUN/TAP interface.
+# Indicate 'yes' to allow clients to "see" each other or
+# indicate 'no' otherwise.
+ALLOW_CLIENT_TO_CLIENT="no"
+
+# The ability to have multiple clients connected with the same
+# certificate/key files or common names. This is recommended
+# only for testing purposes. For production use, each client
+# should have its own certificate/key pair.
+# Indicate 'yes' to allow multiple clients connected with the same
+# certificate/key files or common names or indicate 'no' otherwise.
+#
+# IF YOU HAVE NOT GENERATED INDIVIDUAL
+# CERTIFICATE/KEY PAIRS FOR EACH CLIENT,
+# EACH HAVING ITS OWN UNIQUE "COMMON NAME",
+# ENABLE THIS OPTION.
+ALLOW_DUPLICATE_CN="no"
+
 # The firewall protection mode you want to use to open access
 # to OpenSSH and OpenVPN servers. It can be 'limit' or 'allow'.
 # 'limit' protects the machine, but 'allow' is better when

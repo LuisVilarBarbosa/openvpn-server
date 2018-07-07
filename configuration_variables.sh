@@ -66,11 +66,6 @@ ALLOW_CLIENT_TO_CLIENT="no"
 # should have its own certificate/key pair.
 # Indicate 'yes' to allow multiple clients connected with the same
 # certificate/key files or common names or indicate 'no' otherwise.
-#
-# IF YOU HAVE NOT GENERATED INDIVIDUAL
-# CERTIFICATE/KEY PAIRS FOR EACH CLIENT,
-# EACH HAVING ITS OWN UNIQUE "COMMON NAME",
-# ENABLE THIS OPTION.
 ALLOW_DUPLICATE_CN="no"
 
 # The firewall protection mode you want to use to open access

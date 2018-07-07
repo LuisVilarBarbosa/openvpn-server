@@ -76,6 +76,9 @@ ALLOW_DUPLICATE_CN="no"
 FIREWALL_MODE="limit"
 
 # The names of the different OpenVPN clients.
+# Be sure that these client names are unique among all the OpenVPN
+# servers installed on the machine or the old clients of any server
+# with the same client name will be replaced by the new ones.
 # All the names must be inside the parenthesis and each name
 # must be inside quotation marks and separated from the others
 # by a space.

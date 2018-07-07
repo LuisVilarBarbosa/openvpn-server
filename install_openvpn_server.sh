@@ -43,6 +43,53 @@ echo "Trying to replace an already existing server with the same name will not w
 echo "Press enter to continue..."
 read -r DUMMY_VAR
 
+# Load functions
+
+is_valid_dns_name_fun () {
+  dns_name=$1
+  if [[ ! $dns_name =~ ^([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)$ ]]; then
+    return 0
+  fi
+  if [[ ! $dns_name =~ ^(.{1,63})$ ]]; then
+    return 0
+  fi
+  OIFS=$IFS  # Internal_field_separator
+  IFS="."
+  for part in $dns_name; do
+    if [[ $part =~ ^([0-9]+)$ || $part =~ ^(-) || $part =~ (-)$ ]]; then
+      IFS=OIFS
+      return 0
+    fi
+  done
+  IFS=OIFS
+  return 1
+}
+
+is_valid_ipv4_address_fun () {
+  ipv4_address=$1
+  if [[ ! $ipv4_address =~ ^([0-9]{1,3}(\.[0-9]{1,3}){3})$ ]]; then
+    return 0
+  fi
+  OIFS=$IFS  # Internal_field_separator
+  IFS="."
+  for part in $ipv4_address; do
+    if [[ $part < 0 || $part > 255 ]]; then
+      IFS=OIFS
+      return 0
+    fi
+  done
+  IFS=OIFS
+  return 1
+}
+
+is_valid_ipv6_address_fun () {
+  ipv6_address=$1
+  if [[ $ipv6_address =~ ^([0-9a-fA-F]{4}(:[0-9a-fA-F]{4}){4})$ ]]; then
+    return 1
+  fi
+  return 0
+}
+
 # Preparing the instalation
 INITIAL_PWD=$(pwd)
 INSTALLATION_DIR="/openvpn_instalation"  # This variable is repeated on 'make_config.sh'
@@ -61,10 +108,17 @@ if [[ ! $SERVER_NAME =~ ^([a-zA-Z0-9_-]+)$ ]]; then
   exit
 fi
 
-#if [[ ! $SERVER_ADDRESS =~ ^(\w+(\.\w+)*)$ || ! $SERVER_ADDRESS =~ ^(\d{1,3}(\.\d{1,3}){3})$ || ! $SERVER_ADDRESS =~ ^(\w{4}(:\w{4}){4})$ ]]; then  # TODO: implement this verification
-#  echo "Invalid address: $SERVER_ADDRESS"
-#  echo "It should be a DNS name, an IPv4 address or an IPv6 address."
-#fi
+is_valid_dns_name_fun $SERVER_ADDRESS
+is_valid_dns_name=$?
+is_valid_ipv4_address_fun $SERVER_ADDRESS
+is_valid_ipv4_address=$?
+is_valid_ipv6_address_fun $SERVER_ADDRESS
+is_valid_ipv6_address=$?
+if [[ is_valid_dns_name == 0 && is_valid_ipv4_address == 0 && is_valid_ipv6_address == 0 ]]; then
+  echo "Invalid address: $SERVER_ADDRESS"
+  echo "It should be a DNS name, an IPv4 address or an IPv6 address."
+  exit
+fi
 
 MIN_PORT=0
 MAX_PORT=65535
@@ -80,12 +134,16 @@ if [[ ! $SERVER_PROTOCOL =~ ^(udp|tcp)$ ]]; then
   exit
 fi
 
-if [[ ! $OPENVPN_SUBNET =~ ^([0-9]{1,3}(\.[0-9]{1,3}){3})$ ]]; then
+is_valid_ipv4_address_fun $OPENVPN_SUBNET
+is_valid_ipv4_address=$?
+if [[ is_valid_ipv4_address == 0 ]]; then
   echo "Invalid subnet: $OPENVPN_SUBNET"
   exit
 fi
 
-if [[ ! $OPENVPN_SUBNET_MASK =~ ^([0-9]{1,3}(\.[0-9]{1,3}){3})$ ]]; then
+is_valid_ipv4_address_fun $OPENVPN_SUBNET_MASK
+is_valid_ipv4_address=$?
+if [[ is_valid_ipv4_address == 0 ]]; then
   echo "Invalid subnet mask: $OPENVPN_SUBNET_MASK"
   exit
 fi
@@ -95,8 +153,12 @@ if [[ ! $BYPASS_DNS =~ ^(yes|no)$ ]]; then
   exit
 fi
 
+is_valid_ipv4_address_fun $dns_server
+is_valid_ipv4_address=$?
+is_valid_ipv6_address_fun $dns_server
+is_valid_ipv6_address=$?
 for dns_server in ${DNS_SERVERS_ARRAY[*]}; do
-  if [[ ! $dns_server =~ ^([0-9]{1,3}(\.[0-9]{1,3}){3})$ && ! $dns_server =~ ^([0-9a-fA-F]{4}(:[0-9a-fA-F]{4}){4})$ ]]; then
+  if [[ is_valid_ipv4_address == 0  && is_valid_ipv6_address == 0 ]]; then
     echo "Invalid DNS server: $dns_server"
     exit
   fi

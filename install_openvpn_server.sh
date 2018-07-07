@@ -90,6 +90,18 @@ is_valid_ipv6_address_fun () {
   return 0
 }
 
+is_valid_port_fun () {
+  port=$1
+  MIN_PORT=0
+  MAX_PORT=65535
+  if [[ $port =~ ^([0-9]{1,5})$ && $port -ge $MIN_PORT && $port -le $MAX_PORT ]]; then
+    return 1
+  fi
+  echo "Invalid port: $port"
+  echo "It should be between $MIN_PORT and $MAX_PORT."
+  return 0
+}
+
 # Preparing the instalation
 INITIAL_PWD=$(pwd)
 INSTALLATION_DIR="/openvpn_instalation"  # This variable is repeated on 'make_config.sh'
@@ -108,23 +120,9 @@ if [[ ! $SERVER_NAME =~ ^([a-zA-Z0-9_-]+)$ ]]; then
   exit
 fi
 
-is_valid_dns_name_fun $SERVER_ADDRESS
-is_valid_dns_name=$?
-is_valid_ipv4_address_fun $SERVER_ADDRESS
-is_valid_ipv4_address=$?
-is_valid_ipv6_address_fun $SERVER_ADDRESS
-is_valid_ipv6_address=$?
-if [[ is_valid_dns_name == 0 && is_valid_ipv4_address == 0 && is_valid_ipv6_address == 0 ]]; then
-  echo "Invalid address: $SERVER_ADDRESS"
-  echo "It should be a DNS name, an IPv4 address or an IPv6 address."
-  exit
-fi
-
-MIN_PORT=0
-MAX_PORT=65535
-if [[ ! $SERVER_PORT =~ ^([0-9]{1,5})$ || ! $SERVER_PORT -ge $MIN_PORT || ! $SERVER_PORT -le $MAX_PORT ]]; then
-  echo "Invalid port: $SERVER_PORT"
-  echo "It should be between $MIN_PORT and $MAX_PORT."
+is_valid_port_fun $SERVER_PORT
+is_valid_port=$?
+if [[ is_valid_port == 0 ]]; then
   exit
 fi
 
@@ -189,6 +187,40 @@ for client in ${CLIENTS_ARRAY[*]}; do
     exit
   fi
 done
+
+for server_address in ${SERVER_ADDRESSES_ARRAY[*]}; do
+  is_valid_dns_name_fun $server_address
+  is_valid_dns_name=$?
+  is_valid_ipv4_address_fun $server_address
+  is_valid_ipv4_address=$?
+  is_valid_ipv6_address_fun $server_address
+  is_valid_ipv6_address=$?
+  if [[ is_valid_dns_name == 0 && is_valid_ipv4_address == 0 && is_valid_ipv6_address == 0 ]]; then
+    echo "Invalid address: $server_address"
+    echo "It should be a DNS name, an IPv4 address or an IPv6 address."
+    exit
+  fi
+done
+
+SERVER_ADDRESSES_ARRAY_LENGTH=${#SERVER_ADDRESSES_ARRAY[@]}
+SERVER_PORTS_FOR_CLIENT_ARRAY_LENGTH=${#SERVER_PORTS_FOR_CLIENT_ARRAY[@]}
+if [[ $SERVER_ADDRESSES_ARRAY_LENGTH != $SERVER_PORTS_FOR_CLIENT_ARRAY_LENGTH ]]; then
+  echo "The number of server addresses should be equal to the number of server ports."
+  exit
+fi
+for server_port in ${SERVER_PORTS_FOR_CLIENT_ARRAY[*]}; do
+  is_valid_port_fun $server_port
+  is_valid_port=$?
+  if [[ is_valid_port == 0 ]]; then
+    exit
+  fi
+done
+
+ENABLE_REMOTE_RANDOM=${ENABLE_REMOTE_RANDOM,,} # Changes all characters to lowercase
+if [[ ! $ENABLE_REMOTE_RANDOM =~ ^(yes|no)$ ]]; then
+  echo "Invalid 'remote-random' option: $ENABLE_REMOTE_RANDOM"
+  exit
+fi
 
 apt-get update
 apt-get install -y ufw
@@ -316,7 +348,16 @@ systemctl enable openvpn@$SERVER_NAME
 # Step 8 — Creating the Client Configuration Infrastructure
 mkdir -p $INSTALLATION_DIR/client-configs/files
 cp /usr/share/doc/openvpn/examples/sample-config-files/client.conf $INSTALLATION_DIR/client-configs/base.conf
-perl -i -p -e "s|remote my-server-1 1194|remote $SERVER_ADDRESS $SERVER_PORT|" $INSTALLATION_DIR/client-configs/base.conf
+REMOTES_FULL=""
+for ((i=0; i < $SERVER_ADDRESSES_ARRAY_LENGTH; i++)); do
+  REMOTES_PART="remote ${SERVER_ADDRESSES_ARRAY[$i]} ${SERVER_PORTS_FOR_CLIENT_ARRAY[$i]}\n"
+  REMOTES_FULL="$REMOTES_FULL$REMOTES_PART"
+done
+perl -i -p -e "s|remote my-server-1 1194\n||" $INSTALLATION_DIR/client-configs/base.conf
+perl -i -p -e "s|;remote my-server-2 1194\n|$REMOTES_FULL|" $INSTALLATION_DIR/client-configs/base.conf
+if [[ $ENABLE_REMOTE_RANDOM == "yes" ]]; then
+  perl -i -p -e "s|;remote-random|remote-random|" $INSTALLATION_DIR/client-configs/base.conf
+fi
 perl -i -p -e "s|proto udp|proto $SERVER_PROTOCOL|" $INSTALLATION_DIR/client-configs/base.conf
 perl -i -p -e "s|;user nobody|user nobody|" $INSTALLATION_DIR/client-configs/base.conf
 perl -i -p -e "s|;group nogroup|group nogroup|" $INSTALLATION_DIR/client-configs/base.conf

@@ -15,11 +15,6 @@
 # Do not use spaces or special characters.
 SERVER_NAME="server"
 
-# The address that the client will use to connect to the
-# server. It can be a DNS name, an IPv4 address or an IPv6
-# address.
-SERVER_ADDRESS="example.com"
-
 # The port used by the OpenVPN server. 1194 and 1195 are
 # the default ports.
 # Be sure that the port is not in use.
@@ -86,3 +81,31 @@ FIREWALL_MODE="limit"
 # You can create as many clients you want. Two are already
 # defined for example purposes.
 CLIENTS_ARRAY=("client1" "client2")
+
+# The addresses that the client will use to connect to the
+# server. They can be DNS names, IPv4 addresses or IPv6
+# addresses.
+# All the addresses must be inside the parenthesis and each
+# address must be inside quotation marks and separated from
+# the others by a space.
+# You can provide as many addresses you want. Two are already
+# defined for example purposes and should be replaced.
+SERVER_ADDRESSES_ARRAY=("example.com" "127.0.0.1")
+
+# The ports that the client will use to connect to the
+# server.
+# All the ports must be inside the parenthesis and each
+# port must be inside quotation marks and separated from
+# the others by a space.
+# You must provide as many ports as the addresses in
+# $SERVER_ADDRESSES_ARRAY and each port will be relative
+# to the address with the same index value. Two ports are
+# already defined for example purposes and should be replaced.
+SERVER_PORTS_FOR_CLIENT_ARRAY=("1194" "1194")
+
+# The ability for OpenVPN clients to choose randomly the
+# server to which they will connect.
+# This is useful to distribute the load between several
+# servers or addresses.
+# Indicate 'yes' to enable the option or indicate 'no' otherwise.
+ENABLE_REMOTE_RANDOM="no"

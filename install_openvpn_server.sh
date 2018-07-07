@@ -195,7 +195,7 @@ apt-get install -y ufw
 
 # Step 1 — Installing OpenVPN and EasyRSA
 apt-get install -y openvpn
-wget -P $INSTALLATION_DIR/ https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.4/EasyRSA-3.0.4.tgz
+wget --no-clobber -P $INSTALLATION_DIR/ https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.4/EasyRSA-3.0.4.tgz
 cd $INSTALLATION_DIR
 tar xf EasyRSA-3.0.4.tgz
 

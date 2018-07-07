@@ -295,6 +295,7 @@ fi
 perl -i -p -e "s|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|" /etc/sysctl.conf
 sysctl -p
 cp $INITIAL_PWD/before.rules $INSTALLATION_DIR/
+perl -i -p -e "s|10.8.0.0/8|$OPENVPN_SUBNET/$OPENVPN_SUBNET_MASK_IN_BITS|" $INSTALLATION_DIR/before.rules
 INTERFACE=$(ip route | grep default | grep -P 'dev \w+' -o) # -P means Perl-style and -o means match only (Based on https://stackoverflow.com/questions/3320416/how-to-extract-a-value-from-a-string-using-regex-and-a-shell)
 INTERFACE_ARRAY=($INTERFACE)
 perl -i -p -e "s|eth0|${INTERFACE_ARRAY[1]}|" $INSTALLATION_DIR/before.rules

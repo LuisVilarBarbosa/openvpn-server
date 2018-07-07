@@ -36,6 +36,7 @@ SERVER_PROTOCOL="udp"
 # address of the subnet.
 OPENVPN_SUBNET="10.8.0.0"
 OPENVPN_SUBNET_MASK="255.255.255.0"
+OPENVPN_SUBNET_MASK_IN_BITS="24"
 
 # The ability to block outside DNS servers on the client and
 # only allow those provided by the OpenVPN server.

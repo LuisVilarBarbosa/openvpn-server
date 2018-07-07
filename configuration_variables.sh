@@ -69,7 +69,7 @@ ALLOW_CLIENT_TO_CLIENT="no"
 ALLOW_DUPLICATE_CN="no"
 
 # The firewall protection mode you want to use to open access
-# to OpenSSH and OpenVPN servers. It can be 'limit' or 'allow'.
+# to the OpenVPN server. It can be 'limit' or 'allow'.
 # 'limit' protects the machine, but 'allow' is better when
 # there are multiple connections in a short amount of time.
 FIREWALL_MODE="limit"

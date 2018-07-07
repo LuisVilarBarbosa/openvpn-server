@@ -304,7 +304,6 @@ fi
 rm $INSTALLATION_DIR/before.rules
 perl -i -p -e "s|DEFAULT_FORWARD_POLICY=\"DROP\"|DEFAULT_FORWARD_POLICY=\"ACCEPT\"|" /etc/default/ufw
 ufw $FIREWALL_MODE $SERVER_PORT/$SERVER_PROTOCOL
-ufw $FIREWALL_MODE OpenSSH
 ufw disable
 echo "yes" | ufw enable
 

@@ -39,7 +39,7 @@ fi
 
 echo "This script will create an OpenVPN tunnel."
 echo "Pay attention to the output for errors or warnings."
-echo "Trying to replace an already existing server with the same name will not work correctly. The client configuration files of the original server would work and the ones for the new server would not work."
+echo "Replace an already existing OpenVPN server with the same name will work correctly but old configurations on UFW will remain."
 echo "Press enter to continue..."
 read -r DUMMY_VAR
 
@@ -334,6 +334,9 @@ for client in ${CLIENTS_ARRAY[*]}; do
     perl -i -p -e "s|client\n|client\nsetenv opt block-outside-dns\n|" $INSTALLATION_DIR/client-configs/files/$client.ovpn
   fi
 done
+
+# Restart OpenVPN service (useful when replacing an already existing OpenVPN server)
+systemctl restart openvpn@$SERVER_NAME
 
 # Undoing changes to the terminal status
 cd $INITIAL_PWD

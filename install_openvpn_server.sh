@@ -283,7 +283,7 @@ cp /etc/openvpn/ca_$SERVER_NAME.crt $INSTALLATION_DIR/client-configs/keys/ca.crt
 
 # Step 5 — Configuring the OpenVPN Service
 cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz /etc/openvpn/$SERVER_NAME.conf.gz
-gzip -d /etc/openvpn/$SERVER_NAME.conf.gz
+gzip -d -f /etc/openvpn/$SERVER_NAME.conf.gz
 perl -i -p -e "s|tls-auth ta.key 0 # This file is secret|tls-auth ta_$SERVER_NAME.key 0 # This file is secret\nkey-direction 0|" /etc/openvpn/$SERVER_NAME.conf
 perl -i -p -e "s|cipher AES-256-CBC|cipher AES-256-CBC\nauth SHA256|" /etc/openvpn/$SERVER_NAME.conf
 perl -i -p -e "s|ca ca.crt|ca ca_$SERVER_NAME.crt|" /etc/openvpn/$SERVER_NAME.conf

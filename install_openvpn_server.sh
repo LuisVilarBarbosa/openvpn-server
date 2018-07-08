@@ -105,6 +105,7 @@ is_valid_port_fun () {
 # Preparing the instalation
 INITIAL_PWD=$(pwd)
 INSTALLATION_DIR="/openvpn_instalation"  # This variable is repeated on 'make_config.sh'
+CLIENTS_FILES_DIR="/openvpn_clients_files"
 mkdir -p $INSTALLATION_DIR
 
 cp $INITIAL_PWD/configuration_variables.sh $INSTALLATION_DIR
@@ -370,6 +371,7 @@ cp $INITIAL_PWD/make_config.sh $INSTALLATION_DIR/client-configs/make_config.sh
 chmod 700 $INSTALLATION_DIR/client-configs/make_config.sh
 
 # Step 9 — Generating Client Configurations
+mkdir -p $CLIENTS_FILES_DIR/$SERVER_NAME
 cd $INSTALLATION_DIR/client-configs
 for client in ${CLIENTS_ARRAY[*]}; do
   ./make_config.sh $client
@@ -377,17 +379,19 @@ for client in ${CLIENTS_ARRAY[*]}; do
     perl -i -p -e "s|client\n|client\nsetenv opt block-outside-dns\n|" $INSTALLATION_DIR/client-configs/files/$client.ovpn
   fi
 done
+mv $INSTALLATION_DIR/client-configs/files/* $CLIENTS_FILES_DIR/$SERVER_NAME/
 
 # Restart OpenVPN service (useful when replacing an already existing OpenVPN server)
 systemctl restart openvpn@$SERVER_NAME
 
-# Undoing changes to the terminal status
+# Undoing changes no longer needed
+rm -r $INSTALLATION_DIR
 cd $INITIAL_PWD
 
 # Print informational messages
 echo ""
 echo ""
-echo "The client configuration files are placed on '$INSTALLATION_DIR/client-configs/files/'."
+echo "The client configuration files are placed on '$CLIENTS_FILES_DIR/$SERVER_NAME/'."
 echo "You may want to uncomment the following lines on some of your client configuration files if you are using some Linux client:"
 echo "# script-security 2                    --> script-security 2"
 echo "# up /etc/openvpn/update-resolv-conf   --> up /etc/openvpn/update-resolv-conf"

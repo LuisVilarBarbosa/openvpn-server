@@ -82,6 +82,21 @@ FIREWALL_MODE="limit"
 # defined for example purposes.
 CLIENTS_ARRAY=("client1" "client2")
 
+# The passwords of the different OpenVPN clients.
+# These passwords are an extra security measure so that if
+# someone has access to the certificate/key pair of a client,
+# the password will also be needed to perform the connection.
+# All the passwords must be inside the parenthesis and each one
+# must be inside quotation marks and separated from the others
+# by a space.
+# You must provide as many passwords as the clients in
+# $CLIENTS_ARRAY and each password will be relative to the client
+# with the same index value. Two passwords are already defined for
+# example purposes and should be replaced. The first example
+# password will be used, but the second one indicates that no
+# password should be given to the corresponding client.
+CLIENTS_PASSWORDS_ARRAY=("client1" "")
+
 # The addresses that the client will use to connect to the
 # server. They can be DNS names, IPv4 addresses or IPv6
 # addresses.

@@ -189,6 +189,13 @@ for client in ${CLIENTS_ARRAY[*]}; do
   fi
 done
 
+CLIENTS_ARRAY_LENGTH=${#CLIENTS_ARRAY[@]}
+CLIENTS_PASSWORDS_ARRAY_LENGTH=${#CLIENTS_PASSWORDS_ARRAY[@]}
+if [[ $CLIENTS_ARRAY_LENGTH != $CLIENTS_PASSWORDS_ARRAY_LENGTH ]]; then
+  echo "The number of clients should be equal to the number of passwords."
+  exit
+fi
+
 for server_address in ${SERVER_ADDRESSES_ARRAY[*]}; do
   is_valid_dns_name_fun $server_address
   is_valid_dns_name=$?
@@ -272,8 +279,14 @@ cp $INSTALLATION_DIR/EasyRSA-3.0.4/pki/dh.pem /etc/openvpn/dh_$SERVER_NAME.pem
 mkdir -p $INSTALLATION_DIR/client-configs/keys
 chmod -R 700 $INSTALLATION_DIR/client-configs
 cd $INSTALLATION_DIR/EasyRSA-3.0.4/
-for client in ${CLIENTS_ARRAY[*]}; do
-  echo "" | ./easyrsa gen-req $client nopass
+for ((i=0; i < ${#CLIENTS_ARRAY[@]}; i++)); do
+  client=${CLIENTS_ARRAY[$i]}
+  password=${CLIENTS_PASSWORDS_ARRAY[$i]}
+  if [[ $password == "" ]]; then
+    printf "\n" | ./easyrsa gen-req $client nopass
+  else
+    printf "$password\n$password\n\n" | ./easyrsa gen-req $client
+  fi
   cp pki/private/$client.key $INSTALLATION_DIR/client-configs/keys/
   echo "yes" | ./easyrsa sign-req client $client
   cp pki/issued/$client.crt $INSTALLATION_DIR/client-configs/keys/

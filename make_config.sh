@@ -3,9 +3,9 @@
 # First argument: Client identifier
 
 INSTALLATION_DIR="/openvpn_instalation"  # This variable is repeated on 'install_openvpn_server.sh'
-KEY_DIR=$INSTALLATION_DIR/client-configs/keys
-OUTPUT_DIR=$INSTALLATION_DIR/client-configs/files
-BASE_CONFIG=$INSTALLATION_DIR/client-configs/base.conf
+KEY_DIR="$INSTALLATION_DIR/client-configs/keys"
+OUTPUT_DIR="$INSTALLATION_DIR/client-configs/files"
+BASE_CONFIG="$INSTALLATION_DIR/client-configs/base.conf"
 
 cat ${BASE_CONFIG} \
     <(echo -e '<ca>') \

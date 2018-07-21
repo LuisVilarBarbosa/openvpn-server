@@ -10,7 +10,7 @@ Be free to change this configuration to suit your needs and give suggestions or 
 
 To verify if everything is working, access /var/log/syslog and look at the messages written by "ovpn-*name_given_to_server*".
 
-This configuration has been tested with success on Ubuntu Server 18.04, Debian Stretch 9.4.0 and Raspbian Stretch 9.4.
+This configuration has been tested with success on Ubuntu Server 16.04, Ubuntu Server 18.04, Debian Stretch 9.4.0, Debian Stretch 9.5.0 and Raspbian Stretch 9.4.
 
 This configuration is originally based on:
 - https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-ubuntu-18-04

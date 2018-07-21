@@ -56,10 +56,12 @@ def execute_command(command_array):
 
 def replace_text_in_file(original_string, new_string, file_path):
     text = read_file(file_path)
+    occurrences = text.count(original_string)
     text = text.replace(original_string, new_string)
     f = open(file_path, 'w')
     f.write(text)
     f.close()
+    return occurrences
 
 def read_file(file_path):
     f = open(file_path, 'r')

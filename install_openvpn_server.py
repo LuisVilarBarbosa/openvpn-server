@@ -107,8 +107,10 @@ shutil.copy2("/etc/openvpn/ca_" + configuration_variables.SERVER_NAME + ".crt", 
 server_conf_path = "/etc/openvpn/" + configuration_variables.SERVER_NAME + ".conf"
 shutil.copy2("/usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz", server_conf_path + ".gz")
 functions.decompress_gzip_file(server_conf_path + ".gz")
-functions.replace_text_in_file("tls-auth ta.key 0 # This file is secret", "tls-auth ta_" + configuration_variables.SERVER_NAME + ".key 0 # This file is secret\nkey-direction 0", server_conf_path)
-functions.replace_text_in_file("cipher AES-256-CBC", "cipher AES-256-CBC\nauth SHA256", server_conf_path)
+if functions.replace_text_in_file(";tls-auth ta.key 0 # This file is secret", "tls-auth ta_" + configuration_variables.SERVER_NAME + ".key 0 # This file is secret\nkey-direction 0", server_conf_path) == 0:
+    functions.replace_text_in_file("tls-auth ta.key 0 # This file is secret", "tls-auth ta_" + configuration_variables.SERVER_NAME + ".key 0 # This file is secret\nkey-direction 0", server_conf_path)
+if functions.replace_text_in_file(";cipher AES-128-CBC   # AES", "cipher AES-256-CBC   # AES\nauth SHA256", server_conf_path) == 0:
+    functions.replace_text_in_file("cipher AES-256-CBC", "cipher AES-256-CBC\nauth SHA256", server_conf_path)
 functions.replace_text_in_file("ca ca.crt", "ca ca_" + configuration_variables.SERVER_NAME + ".crt", server_conf_path)
 functions.replace_text_in_file("dh dh2048.pem", "dh dh_" + configuration_variables.SERVER_NAME + ".pem", server_conf_path)
 functions.replace_text_in_file(";user nobody", "user nobody", server_conf_path)
@@ -182,7 +184,8 @@ functions.replace_text_in_file(";group nogroup", "group nogroup", base_conf_path
 functions.replace_text_in_file("ca ca.crt", "#ca ca.crt", base_conf_path)
 functions.replace_text_in_file("cert client.crt", "#cert client.crt", base_conf_path)
 functions.replace_text_in_file("key client.key", "#key client.key", base_conf_path)
-functions.replace_text_in_file("cipher AES-256-CBC", "cipher AES-256-CBC\nauth SHA256\nkey-direction 1", base_conf_path)
+if functions.replace_text_in_file(";cipher x", "cipher AES-256-CBC\nauth SHA256\nkey-direction 1", base_conf_path) == 0:
+    functions.replace_text_in_file("cipher AES-256-CBC", "cipher AES-256-CBC\nauth SHA256\nkey-direction 1", base_conf_path)
 functions.replace_text_in_file("key-direction 1", "key-direction 1\n# script-security 2\n# up /etc/openvpn/update-resolv-conf\n# down /etc/openvpn/update-resolv-conf", base_conf_path)
 shutil.copy2(auxiliary_files_path + "/make_config.sh", client_configs_dir + "/make_config.sh")
 os.chmod(client_configs_dir + "/make_config.sh", 0o700)

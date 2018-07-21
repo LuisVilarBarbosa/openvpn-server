@@ -9,6 +9,7 @@ import tarfile
 import tempfile
 import functions
 
+functions.verify_python_version()
 my_file_path = os.path.abspath(sys.argv[0])
 
 # Verify if this script is running as root

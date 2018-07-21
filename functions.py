@@ -131,3 +131,10 @@ def move_content(src_folder, dst_folder):
     files = os.listdir(src_folder)
     for f in files:
         move(os.path.join(src_folder, f), os.path.join(dst_folder, f))
+
+def verify_python_version():
+    from sys import version
+    version_number = int(version[:version.find(".")])
+    if version_number < 3:
+        print("Please use Python3 or higher.")
+        quit()

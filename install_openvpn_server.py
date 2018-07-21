@@ -27,7 +27,7 @@ input("Press enter to continue...")
 # Preparing the installation
 initial_cwd = os.getcwd()
 auxiliary_files_path = my_file_path[:my_file_path.rfind("/")]
-installation_dir = "/openvpn_instalation"  # This variable is repeated on 'make_config.sh'
+installation_dir = tempfile.mkdtemp()
 clients_files_dir = "/openvpn_clients_files"
 functions.makedirs(installation_dir)
 
@@ -191,7 +191,7 @@ server_clients_files_dir = clients_files_dir + "/" + configuration_variables.SER
 functions.makedirs(server_clients_files_dir)
 os.chdir(client_configs_dir)
 for client in configuration_variables.CLIENTS_ARRAY:
-    functions.execute_command(["./make_config.sh", client])
+    functions.execute_command(["./make_config.sh", client, installation_dir])
     if configuration_variables.BYPASS_DNS == "yes":
         functions.replace_text_in_file("client\n", "client\nsetenv opt block-outside-dns\n", client_configs_dir + "/files/" + client + ".ovpn")
 functions.move_content(client_configs_dir + "/files/", server_clients_files_dir)

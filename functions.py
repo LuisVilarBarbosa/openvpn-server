@@ -11,7 +11,7 @@ def is_valid_dns_name(dns_name):
         return False
     dns_name_parts = dns_name.split(".")
     for part in dns_name_parts:
-        if matches_regex("^([0-9]+)$", part) or matches_regex("^(-)", part) or matches_regex("(-)$", part):
+        if matches_regex("^([0-9]+)$", part) or matches_regex("^(-.*)", part) or matches_regex("(.*-)$", part):
             return False
     return True
 
@@ -32,11 +32,12 @@ def is_valid_ipv6_address(ipv6_address):
 
 def is_valid_port(port):
     int_port = int(port)
+    str_port = str(port)
     min_port = 0
     max_port = 65535
-    if matches_regex("^([0-9]{1,5})$", str(port)) and int_port >= min_port and int_port <= max_port:
+    if matches_regex("^([0-9]{1,5})$", str_port) and int_port >= min_port and int_port <= max_port:
         return True
-    print("Invalid port: " + port)
+    print("Invalid port: " + str_port)
     print("It should be between " + str(min_port) + " and " + str(max_port) + ".")
     return False
 

@@ -1,6 +1,6 @@
 # OpenVPN server
 
-This repository contains the necessary instructions to configure an OpenVPN server.
+This repository contains the Python code necessary to configure an OpenVPN server.
 
 The entry point to install the OpenVPN server is "install_openvpn_server.py".
 
@@ -14,3 +14,6 @@ This configuration has been tested with success on Ubuntu Server 18.04, Debian S
 
 This configuration is originally based on:
 - https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-ubuntu-18-04
+
+A little bit of history:
+- Originally, this repository contained Bash scripts used to configure the OpenVPN servers, but because some mistakes were not being detected due to the nature of the Bash shell and because it was being necessary some complex Bash code to perform all the operations needed, the Bash code has been moved to Python.

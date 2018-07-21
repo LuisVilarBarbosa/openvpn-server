@@ -91,11 +91,55 @@ class TestMethods(unittest.TestCase):
         pass # TODO
     
     def test_replace_text_in_file(self):
-        pass # TODO
+        from tempfile import mkstemp, gettempdir
+        from os import remove, listdir, path
+        original_string = "123\n456\n"
+        new_string = original_string + "123\nabc\n"
+        fd, file_path = mkstemp(text = True)
+        functions.write_file(file_path, original_string)
+        self.assertEqual(functions.read_file(file_path), original_string)
+        self.assertNotEqual(functions.read_file(file_path), new_string)
+        functions.replace_text_in_file(original_string, new_string, file_path)
+        self.assertEqual(functions.read_file(file_path), new_string)
+        self.assertNotEqual(functions.read_file(file_path), original_string)
+        file_basename = path.basename(file_path)
+        self.assertFalse(file_basename not in listdir(gettempdir()))
+        remove(file_path)
+        self.assertTrue(file_basename not in listdir(gettempdir()))
     
     def test_read_file(self):
-        pass # TODO
+        from sys import argv
+        from tempfile import mkstemp, gettempdir
+        from os import remove, listdir, path
+        text1 = functions.read_file(argv[0])
+        text2 = functions.read_file(argv[0])
+        self.assertEqual(text1, text2)
+        self.assertTrue("def test_read_file(self):" in text1)
+
+        string = "123\n456\n"
+        fd, file_path = mkstemp(text = True)
+        functions.write_file(file_path, string)
+        text3 = functions.read_file(file_path)
+        self.assertNotEqual(text1, text3)
+        file_basename = path.basename(file_path)
+        self.assertFalse(file_basename not in listdir(gettempdir()))
+        remove(file_path)
+        self.assertTrue(file_basename not in listdir(gettempdir()))
     
+    def test_write_file(self):
+        from tempfile import mkstemp, gettempdir
+        from os import remove, listdir, path
+        text = "123\n456\n"
+        fd, file_path = mkstemp(text = True)
+        self.assertEqual(functions.read_file(file_path), "")
+        self.assertNotEqual(functions.read_file(file_path), text)
+        functions.write_file(file_path, text)
+        self.assertEqual(functions.read_file(file_path), text)
+        file_basename = path.basename(file_path)
+        self.assertFalse(file_basename not in listdir(gettempdir()))
+        remove(file_path)
+        self.assertTrue(file_basename not in listdir(gettempdir()))
+
     def test_execute_and_send_input_to_command(self):
         pass # TODO
     

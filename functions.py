@@ -59,9 +59,7 @@ def replace_text_in_file(original_string, new_string, file_path):
     text = read_file(file_path)
     occurrences = text.count(original_string)
     text = text.replace(original_string, new_string)
-    f = open(file_path, 'w')
-    f.write(text)
-    f.close()
+    write_file(file_path, text)
     return occurrences
 
 def read_file(file_path):
@@ -69,6 +67,11 @@ def read_file(file_path):
     text = f.read()
     f.close()
     return text
+
+def write_file(file_path, text):
+    f = open(file_path, 'w')
+    f.write(text)
+    f.close()
 
 def execute_and_send_input_to_command(command_array, input_to_subprocess):
     from subprocess import Popen, PIPE

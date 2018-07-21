@@ -28,7 +28,7 @@ input("Press enter to continue...")
 initial_cwd = os.getcwd()
 auxiliary_files_path = my_file_path[:my_file_path.rfind("/")]
 installation_dir = tempfile.mkdtemp()
-clients_files_dir = "/openvpn_clients_files"
+clients_files_dir = initial_cwd + "/openvpn_clients_files"
 functions.makedirs(installation_dir)
 
 input("Please update the variables inside 'configuration_variables.py', save the file and press enter.")

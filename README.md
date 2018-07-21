@@ -2,7 +2,7 @@
 
 This repository contains the necessary instructions to configure an OpenVPN server.
 
-The entry point to install the OpenVPN server is "install_openvpn_server.sh".
+The entry point to install the OpenVPN server is "install_openvpn_server.py".
 
 This configuration is useful to create an OpenVPN server on hardware like a Raspberry Pi, that does not support software like pfSense, in a simple and fast manner and has some extra features not indicated in the Digital Ocean's tutorial like the ability to block the usage of DNS servers external to those indicated by the OpenVPN server which was an issue on Windows 10.
 

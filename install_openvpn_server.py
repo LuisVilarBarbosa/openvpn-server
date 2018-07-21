@@ -110,12 +110,12 @@ INSTALLATION_DIR="/openvpn_instalation"  # This variable is repeated on 'make_co
 CLIENTS_FILES_DIR="/openvpn_clients_files"
 mkdir -p "$INSTALLATION_DIR"
 
-cp "$AUXILIARY_FILES_PATH/configuration_variables.sh" "$INSTALLATION_DIR"
-echo "Please update the variables inside 'configuration_variables.sh'."
+cp "$AUXILIARY_FILES_PATH/configuration_variables.py" "$INSTALLATION_DIR"
+echo "Please update the variables inside 'configuration_variables.py'."
 echo "Press enter to perform the manual update."
 read -r DUMMY_VAR
-nano "$INSTALLATION_DIR/configuration_variables.sh"
-source "$INSTALLATION_DIR/configuration_variables.sh"
+nano "$INSTALLATION_DIR/configuration_variables.py"
+source "$INSTALLATION_DIR/configuration_variables.py"
 
 if [[ ! "$SERVER_NAME" =~ ^([a-zA-Z0-9_-]+)$ ]]; then
   echo "Invalid name: $SERVER_NAME"

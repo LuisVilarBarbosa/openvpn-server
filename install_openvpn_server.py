@@ -35,6 +35,7 @@ functions.makedirs(installation_dir)
 input("Please update the variables inside 'configuration_variables.py', save the file and press enter.")
 import configuration_variables
 import configuration_variables_validator
+configuration_variables_validator.validate_configuration_variables()
 
 functions.execute_command(["apt-get", "update"])
 functions.execute_command(["apt-get", "install", "-y", "ufw"])

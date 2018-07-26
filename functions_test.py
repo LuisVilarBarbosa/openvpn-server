@@ -81,7 +81,6 @@ class TestMethods(unittest.TestCase):
             self.assertTrue(functions.is_valid_port(i))
         self.assertFalse(functions.is_valid_port(min_port - 1 - randrange(maxsize)))
         self.assertFalse(functions.is_valid_port(num_ports + randrange(maxsize)))
-
     
     def test_matches_regex(self):
         self.assertTrue(functions.matches_regex("^\d$", "5"))
@@ -91,54 +90,39 @@ class TestMethods(unittest.TestCase):
         pass # TODO
     
     def test_replace_text_in_file(self):
-        from tempfile import mkstemp, gettempdir
-        from os import remove, listdir, path
         original_string = "123\n456\n"
         new_string = original_string + "123\nabc\n"
-        fd, file_path = mkstemp(text = True)
-        functions.write_file(file_path, original_string)
+        file_path = AuxiliaryTestMethods.create_temp_text_file(original_string)
         self.assertEqual(functions.read_file(file_path), original_string)
         self.assertNotEqual(functions.read_file(file_path), new_string)
         functions.replace_text_in_file(original_string, new_string, file_path)
         self.assertEqual(functions.read_file(file_path), new_string)
         self.assertNotEqual(functions.read_file(file_path), original_string)
-        file_basename = path.basename(file_path)
-        self.assertFalse(file_basename not in listdir(gettempdir()))
-        remove(file_path)
-        self.assertTrue(file_basename not in listdir(gettempdir()))
+        AuxiliaryTestMethods.remove_temp_file(self, file_path)
     
     def test_read_file(self):
         from sys import argv
-        from tempfile import mkstemp, gettempdir
-        from os import remove, listdir, path
         text1 = functions.read_file(argv[0])
         text2 = functions.read_file(argv[0])
         self.assertEqual(text1, text2)
         self.assertTrue("def test_read_file(self):" in text1)
 
         string = "123\n456\n"
-        fd, file_path = mkstemp(text = True)
-        functions.write_file(file_path, string)
+        file_path = AuxiliaryTestMethods.create_temp_text_file(string)
         text3 = functions.read_file(file_path)
         self.assertNotEqual(text1, text3)
-        file_basename = path.basename(file_path)
-        self.assertFalse(file_basename not in listdir(gettempdir()))
-        remove(file_path)
-        self.assertTrue(file_basename not in listdir(gettempdir()))
+        self.assertEqual(text3, string)
+        AuxiliaryTestMethods.remove_temp_file(self, file_path)
     
     def test_write_file(self):
-        from tempfile import mkstemp, gettempdir
-        from os import remove, listdir, path
+        empty_string = ""
         text = "123\n456\n"
-        fd, file_path = mkstemp(text = True)
-        self.assertEqual(functions.read_file(file_path), "")
+        file_path = AuxiliaryTestMethods.create_temp_text_file(empty_string)
+        self.assertEqual(functions.read_file(file_path), empty_string)
         self.assertNotEqual(functions.read_file(file_path), text)
         functions.write_file(file_path, text)
         self.assertEqual(functions.read_file(file_path), text)
-        file_basename = path.basename(file_path)
-        self.assertFalse(file_basename not in listdir(gettempdir()))
-        remove(file_path)
-        self.assertTrue(file_basename not in listdir(gettempdir()))
+        AuxiliaryTestMethods.remove_temp_file(self, file_path)
 
     def test_execute_and_send_input_to_command(self):
         pass # TODO
@@ -163,6 +147,21 @@ class TestMethods(unittest.TestCase):
     
     def test_get_python_version(self):
         pass #TODO
+
+class AuxiliaryTestMethods():
+    def create_temp_text_file(text):
+        from tempfile import mkstemp
+        fd, file_path = mkstemp(text = True)
+        functions.write_file(file_path, text)
+        return file_path 
+
+    def remove_temp_file(test_class, file_path):
+        from tempfile import gettempdir
+        from os import remove, listdir, path
+        file_basename = path.basename(file_path)
+        test_class.assertFalse(file_basename not in listdir(gettempdir()))
+        remove(file_path)
+        test_class.assertTrue(file_basename not in listdir(gettempdir()))
 
 if __name__ == '__main__':
     unittest.main()

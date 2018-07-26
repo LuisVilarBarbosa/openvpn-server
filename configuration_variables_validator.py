@@ -3,6 +3,7 @@
 
 import configuration_variables
 import functions
+import ui
 
 def validate_configuration_variables():
     validate_server_name()
@@ -28,8 +29,7 @@ def validate_server_name():
         quit()
 
 def validate_server_port():
-    if not functions.is_valid_port(configuration_variables.SERVER_PORT):
-        quit()
+    ui.is_valid_port(configuration_variables.SERVER_PORT)
 
 def validate_server_protocol():
     configuration_variables.SERVER_PROTOCOL = configuration_variables.SERVER_PROTOCOL.lower()

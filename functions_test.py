@@ -161,7 +161,7 @@ class TestMethods(unittest.TestCase):
     def test_move_content(self):
         pass # TODO
     
-    def test_verify_python_version(self):
+    def test_get_python_version(self):
         pass #TODO
 
 if __name__ == '__main__':

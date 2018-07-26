@@ -37,8 +37,6 @@ def is_valid_port(port):
     max_port = 65535
     if matches_regex("^([0-9]{1,5})$", str_port) and int_port >= min_port and int_port <= max_port:
         return True
-    print("Invalid port: " + str_port)
-    print("It should be between " + str(min_port) + " and " + str(max_port) + ".")
     return False
 
 def matches_regex(regex, string):
@@ -48,12 +46,10 @@ def matches_regex(regex, string):
 
 def execute_command(command_array):
     from subprocess import check_call, CalledProcessError
-    #print("Executing: " + str(command_array))
     try:
         check_call(command_array)
     except CalledProcessError:
-        print("An error occurred while running the following program: " + str(command_array))
-        quit()
+        raise
 
 def replace_text_in_file(original_string, new_string, file_path):
     text = read_file(file_path)
@@ -75,12 +71,9 @@ def write_file(file_path, text):
 
 def execute_and_send_input_to_command(command_array, input_to_subprocess):
     from subprocess import Popen, PIPE
-    #print("Executing: " + str(command_array))
     p = Popen(command_array, stdin = PIPE)
     p.communicate(input = input_to_subprocess.encode())
-    if p.returncode != 0:
-        print("An error occurred while running the following program: " + str(command_array))
-        quit()
+    return p.returncode
 
 def chmod_recursive(path, mode):
     for root, dirs, files in os.walk(path):
@@ -109,12 +102,10 @@ def makedirs(path, mode = 0o777):
 
 def get_command_output(command_array):
     from subprocess import check_output, CalledProcessError
-    #print("Executing: " + str(command_array))
     try:
         return str(check_output(command_array))
     except CalledProcessError:
-        print("An error occurred while running the following program: " + str(command_array))
-        quit()
+        raise
 
 def get_default_network_device():
     from subprocess import check_output
@@ -129,8 +120,7 @@ def get_default_network_device():
                     return line_part
                 elif line_part == "dev":
                     dev_found = True
-    print("No default network device found.")
-    quit()
+    return None
 
 def move_content(src_folder, dst_folder):
     from shutil import move
@@ -138,9 +128,7 @@ def move_content(src_folder, dst_folder):
     for f in files:
         move(os.path.join(src_folder, f), os.path.join(dst_folder, f))
 
-def verify_python_version():
+def get_python_version():
     from sys import version
     version_number = int(version[:version.find(".")])
-    if version_number < 3:
-        print("Please use Python3 or higher.")
-        quit()
+    return version_number

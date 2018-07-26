@@ -92,11 +92,11 @@ functions.chmod_recursive(client_configs_dir, 0o700)
 os.chdir(easyrsa_dir)
 for i in range(len(configuration_variables.CLIENTS_ARRAY)):
     client = configuration_variables.CLIENTS_ARRAY[i]
-    password = configuration_variables.CLIENTS_PASSWORDS_ARRAY[i]
-    if password == "":
+    enable_password = configuration_variables.ENABLE_CLIENTS_PASSWORDS_ARRAY[i]
+    if enable_password == "no":
           functions.execute_and_send_input_to_command(["./easyrsa", "gen-req", client, "nopass"], "\n")
-    else:
-          functions.execute_and_send_input_to_command(["./easyrsa", "gen-req", client], password + "\n" + password + "\n\n")
+    elif enable_password == "yes":
+          functions.execute_and_send_input_to_command(["./easyrsa", "gen-req", client], "\n")
     shutil.copy2("pki/private/" + client + ".key", client_keys_dir + "/")
     functions.execute_and_send_input_to_command(["./easyrsa", "sign-req", "client", client], "yes\n")
     shutil.copy2("pki/issued/" + client + ".crt", client_keys_dir + "/")

@@ -55,9 +55,16 @@ for client in configuration_variables.CLIENTS_ARRAY:
         print("Please, do not use spaces or special characters.")
         quit()
 
-if len(configuration_variables.CLIENTS_ARRAY) != len(configuration_variables.CLIENTS_PASSWORDS_ARRAY):
-    print("The number of clients should be equal to the number of passwords.")
+if len(configuration_variables.CLIENTS_ARRAY) != len(configuration_variables.ENABLE_CLIENTS_PASSWORDS_ARRAY):
+    print("The number of clients should be equal to the number of password activation options.")
     quit()
+
+for i in range(len(configuration_variables.ENABLE_CLIENTS_PASSWORDS_ARRAY)):
+    configuration_variables.ENABLE_CLIENTS_PASSWORDS_ARRAY[i] = configuration_variables.ENABLE_CLIENTS_PASSWORDS_ARRAY[i].lower()
+    enable_password = configuration_variables.ENABLE_CLIENTS_PASSWORDS_ARRAY[i]
+    if not functions.matches_regex("^(yes|no)$", enable_password):
+        print("Invalid 'enable password' option: " + enable_password)
+        quit()
 
 for server_address in configuration_variables.SERVER_ADDRESSES_ARRAY:
     if not functions.is_valid_dns_name(server_address) and not functions.is_valid_ipv4_address(server_address)and not functions.is_valid_ipv6_address(server_address):

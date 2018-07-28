@@ -44,12 +44,22 @@ def matches_regex(regex, string):
         return False
     return True
 
-def execute_command(command_array):
-    from subprocess import check_call, CalledProcessError
-    try:
-        check_call(command_array)
-    except CalledProcessError:
-        raise
+def execute_command(command_array, input_to_subprocess = None, collect_output = False):
+    from subprocess import Popen, PIPE, STDOUT, CalledProcessError
+    if input_to_subprocess == None:
+        input_channel = None
+    else:
+        input_channel = PIPE
+        input_to_subprocess = input_to_subprocess.encode()
+    if collect_output:
+        output_channel = PIPE
+    else:
+        output_channel = None
+    p = Popen(command_array, stdin = input_channel, stdout = output_channel, stderr = output_channel)
+    out, err = p.communicate(input = input_to_subprocess)
+    if p.returncode != 0:
+        raise CalledProcessError(p.returncode, command_array, out, err)
+    return out, err
 
 def replace_text_in_file(original_string, new_string, file_path):
     text = read_file(file_path)
@@ -68,12 +78,6 @@ def write_file(file_path, text):
     f = open(file_path, 'w')
     f.write(text)
     f.close()
-
-def execute_and_send_input_to_command(command_array, input_to_subprocess):
-    from subprocess import Popen, PIPE
-    p = Popen(command_array, stdin = PIPE)
-    p.communicate(input = input_to_subprocess.encode())
-    return p.returncode
 
 def chmod_recursive(path, mode):
     for root, dirs, files in os.walk(path):
@@ -100,16 +104,10 @@ def makedirs(path, mode = 0o777):
     except FileExistsError:
         pass
 
-def get_command_output(command_array):
-    from subprocess import check_output, CalledProcessError
-    try:
-        return str(check_output(command_array))
-    except CalledProcessError:
-        raise
-
 def get_default_network_device():
     from subprocess import check_output
-    ip_route = get_command_output(["ip", "route"])
+    out, err = execute_command(command_array = ["ip", "route"], collect_output = True)
+    ip_route = str(out)
     ip_route_lines = ip_route.splitlines()
     for line in ip_route_lines:
         if line.find("default") != -1:

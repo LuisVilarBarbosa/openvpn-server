@@ -85,9 +85,24 @@ class TestMethods(unittest.TestCase):
     def test_matches_regex(self):
         self.assertTrue(functions.matches_regex("^\d$", "5"))
         self.assertFalse(functions.matches_regex("^\d$", "a"))
-    
+        
     def test_execute_command(self):
-        pass # TODO
+        from subprocess import CalledProcessError
+        out, err = functions.execute_command(["sleep", "0"])
+        self.assertEqual(out, None)
+        self.assertEqual(err, None)
+        try:
+            out, err = functions.execute_command(["sleep", "-1"], None, True)
+            self.fail("No exception has been raised.")
+        except CalledProcessError as e:
+            self.assertEqual(e.output, b"")
+            self.assertEqual(e.stderr, b"sleep: invalid option -- '1'\nTry 'sleep --help' for more information.\n")
+        out, err = functions.execute_command(["echo", "ola"], None, True)
+        self.assertEqual(out, b"ola\n")
+        self.assertEqual(err, b"")
+        out, err = functions.execute_command(["cat"], "ola\n", True)
+        self.assertEqual(out, b"ola\n")
+        self.assertEqual(err, b"")
     
     def test_replace_text_in_file(self):
         original_string = "123\n456\n"
@@ -123,9 +138,6 @@ class TestMethods(unittest.TestCase):
         functions.write_file(file_path, text)
         self.assertEqual(functions.read_file(file_path), text)
         AuxiliaryTestMethods.remove_temp_file(self, file_path)
-
-    def test_execute_and_send_input_to_command(self):
-        pass # TODO
     
     def test_chmod_recursive(self):
         pass # TODO
@@ -136,17 +148,19 @@ class TestMethods(unittest.TestCase):
     def test_makedirs(self):
         pass # TODO
     
-    def test_get_command_output(self):
-        pass # TODO
-    
     def test_get_default_network_device(self):
-        pass # TODO
+        default_network_device = functions.get_default_network_device()
+        if default_network_device != None:
+            self.assertEqual(type(default_network_device), str)
+            self.assertNotEqual(default_network_device, "")
     
     def test_move_content(self):
         pass # TODO
     
     def test_get_python_version(self):
-        pass #TODO
+        python_version = functions.get_python_version()
+        self.assertEqual(type(python_version), int)
+        self.assertTrue(python_version >= 0)
 
 class AuxiliaryTestMethods():
     def create_temp_text_file(text):

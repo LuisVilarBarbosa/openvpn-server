@@ -68,14 +68,14 @@ print(" - EASYRSA_REQ_EMAIL")
 print(" - EASYRSA_REQ_OU")
 input("Press enter to perform the manual update.")
 ui.execute_command(["nano", vars_path])
-ui.execute_and_send_input_to_command(["./easyrsa", "init-pki"], "yes\n")
-ui.execute_and_send_input_to_command(["./easyrsa", "build-ca", "nopass"], "\n")
+ui.execute_command(["./easyrsa", "init-pki"], "yes\n")
+ui.execute_command(["./easyrsa", "build-ca", "nopass"], "\n")
 
 # Step 3 — Creating the Server Certificate, Key, and Encryption Files
 os.chdir(easyrsa_dir)
-ui.execute_and_send_input_to_command(["./easyrsa", "gen-req",  configuration_variables.SERVER_NAME, "nopass"], "\n")
+ui.execute_command(["./easyrsa", "gen-req",  configuration_variables.SERVER_NAME, "nopass"], "\n")
 shutil.copy2(easyrsa_dir + "/pki/private/" + configuration_variables.SERVER_NAME + ".key", "/etc/openvpn/")
-ui.execute_and_send_input_to_command(["./easyrsa", "sign-req", "server", configuration_variables.SERVER_NAME], "yes\n")
+ui.execute_command(["./easyrsa", "sign-req", "server", configuration_variables.SERVER_NAME], "yes\n")
 shutil.copy2("pki/issued/" + configuration_variables.SERVER_NAME + ".crt", "/tmp")
 shutil.copy2("pki/ca.crt", "/tmp")
 shutil.copy2("/tmp/" + configuration_variables.SERVER_NAME + ".crt", "/etc/openvpn/")
@@ -95,11 +95,11 @@ for i in range(len(configuration_variables.CLIENTS_ARRAY)):
     client = configuration_variables.CLIENTS_ARRAY[i]
     enable_password = configuration_variables.ENABLE_CLIENTS_PASSWORDS_ARRAY[i]
     if enable_password == "no":
-          ui.execute_and_send_input_to_command(["./easyrsa", "gen-req", client, "nopass"], "\n")
+          ui.execute_command(["./easyrsa", "gen-req", client, "nopass"], "\n")
     elif enable_password == "yes":
-          ui.execute_and_send_input_to_command(["./easyrsa", "gen-req", client], "\n")
+          ui.execute_command(["./easyrsa", "gen-req", client], "\n")
     shutil.copy2("pki/private/" + client + ".key", client_keys_dir + "/")
-    ui.execute_and_send_input_to_command(["./easyrsa", "sign-req", "client", client], "yes\n")
+    ui.execute_command(["./easyrsa", "sign-req", "client", client], "yes\n")
     shutil.copy2("pki/issued/" + client + ".crt", client_keys_dir + "/")
 shutil.copy2(easyrsa_dir + "/ta.key", client_keys_dir + "/")
 shutil.copy2("/etc/openvpn/ca_" + configuration_variables.SERVER_NAME + ".crt", client_keys_dir + "/ca.crt")
@@ -161,7 +161,7 @@ ui.replace_text_in_file("DEFAULT_FORWARD_POLICY=\"DROP\"", "DEFAULT_FORWARD_POLI
 ui.execute_command(["ufw", configuration_variables.FIREWALL_MODE, configuration_variables.SERVER_PORT + "/" + configuration_variables.SERVER_PROTOCOL])
 ui.execute_command(["ufw", configuration_variables.FIREWALL_MODE, "OpenSSH"])
 ui.execute_command(["ufw", "disable"])
-ui.execute_and_send_input_to_command(["ufw", "enable"], "y\n")
+ui.execute_command(["ufw", "enable"], "y\n")
 
 # Step 7 — Starting and Enabling the OpenVPN Service
 ui.execute_command(["systemctl", "start", "openvpn@" + configuration_variables.SERVER_NAME])

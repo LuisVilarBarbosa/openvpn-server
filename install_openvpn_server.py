@@ -10,23 +10,21 @@ import tempfile
 import ui
 
 def main():
+    ui.verify_python_version()
+    my_file_path = os.path.abspath(sys.argv[0])
+
+    # Verify if this script is running as root
+    if os.geteuid() != 0:
+        print("Running this script as root.")
+        ui.execute_command(["sudo", "python3", my_file_path])
+        quit()
+
+    # Print initialization messages
+    print("This script will create an OpenVPN tunnel.")
+    print("Replace an already existing OpenVPN server with the same name will work correctly but old configurations on UFW will remain.")
+    input("Press enter to continue...")
+
     try:
-        ui.verify_python_version()
-        my_file_path = os.path.abspath(sys.argv[0])
-
-        # Verify if this script is running as root
-
-        if os.geteuid() != 0:
-            print("Running this script as root.")
-            ui.execute_command(["sudo", "python3", my_file_path])
-            quit()
-
-        # Print initialization messages
-
-        print("This script will create an OpenVPN tunnel.")
-        print("Replace an already existing OpenVPN server with the same name will work correctly but old configurations on UFW will remain.")
-        input("Press enter to continue...")
-
         # Preparing the installation
         initial_cwd = os.getcwd()
         auxiliary_files_path = my_file_path[:my_file_path.rfind("/")]

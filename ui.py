@@ -24,7 +24,7 @@ def matches_regex(regex, string):
 
 def execute_command(command_array, input_to_subprocess = None, collect_output = False):
     from subprocess import CalledProcessError
-    #print("Executing: " + str(command_array))
+    print("\nExecuting: " + str(command_array))
     try:
         out, err = functions.execute_command(command_array, input_to_subprocess, collect_output)
         return out, err

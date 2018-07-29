@@ -261,4 +261,6 @@ class AuxiliaryTestMethods():
         return content_array
 
 if __name__ == '__main__':
+    from ui import verify_python_version
+    verify_python_version()
     unittest.main()

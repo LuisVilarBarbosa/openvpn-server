@@ -93,14 +93,16 @@ class TestMethods(unittest.TestCase):
             out, err = functions.execute_command(["sleep", "-1"], None, True)
             self.fail("No exception has been raised.")
         except CalledProcessError as e:
-            self.assertEqual(e.output, b"")
-            self.assertEqual(e.stderr, b"sleep: invalid option -- '1'\nTry 'sleep --help' for more information.\n")
+            self.assertEqual(e.output, "")
+            self.assertTrue(e.stderr.startswith("sleep:"))
+            self.assertTrue("'1'\n" in e.stderr)
+            self.assertTrue("'sleep --help'" in e.stderr)
         out, err = functions.execute_command(["echo", "ola"], None, True)
-        self.assertEqual(out, b"ola\n")
-        self.assertEqual(err, b"")
+        self.assertEqual(out, "ola\n")
+        self.assertEqual(err, "")
         out, err = functions.execute_command(["cat"], "ola\n", True)
-        self.assertEqual(out, b"ola\n")
-        self.assertEqual(err, b"")
+        self.assertEqual(out, "ola\n")
+        self.assertEqual(err, "")
     
     def test_replace_text_in_file(self):
         from os import remove
@@ -142,11 +144,11 @@ class TestMethods(unittest.TestCase):
     
     def test_chmod_recursive(self):
         from shutil import rmtree
-        new_mode = 0o766
+        new_mode = 0o740
         temp_dir = AuxiliaryTestMethods.create_temp_dir_populated(self)
-        AuxiliaryTestMethods.check_mode_recursive(self.assertNotEqual, temp_dir, new_mode)
+        AuxiliaryTestMethods.check_mode_recursive(self.assertNotEqual, temp_dir, new_mode, check_root = True)
         functions.chmod_recursive(temp_dir, new_mode)
-        AuxiliaryTestMethods.check_mode_recursive(self.assertEqual, temp_dir, new_mode)
+        AuxiliaryTestMethods.check_mode_recursive(self.assertEqual, temp_dir, new_mode, check_root = True)
         rmtree(temp_dir)
     
     def test_decompress_gzip_file(self):
@@ -157,13 +159,14 @@ class TestMethods(unittest.TestCase):
         from os import path
         from shutil import rmtree
         temp_folder_path = mkdtemp()
-        new_path = path.join(temp_folder_path, AuxiliaryTestMethods.get_random_str(), AuxiliaryTestMethods.get_random_str(), AuxiliaryTestMethods.get_random_str())
-        mode = 0o777
+        first_new_folder_path = path.join(temp_folder_path, AuxiliaryTestMethods.get_random_str())
+        full_new_path = path.join(first_new_folder_path, AuxiliaryTestMethods.get_random_str(), AuxiliaryTestMethods.get_random_str())
+        mode = 0o740
         self.assertNotEqual(AuxiliaryTestMethods.get_st_mode(temp_folder_path), mode)
-        self.assertFalse(path.exists(new_path))
-        functions.makedirs(new_path, mode)
-        self.assertTrue(path.exists(new_path))
-        AuxiliaryTestMethods.check_mode_recursive(self.assertEqual, temp_folder_path, mode)
+        self.assertFalse(path.exists(first_new_folder_path))
+        functions.makedirs(full_new_path, mode)
+        self.assertTrue(path.exists(full_new_path))
+        AuxiliaryTestMethods.check_mode_recursive(self.assertEqual, first_new_folder_path, mode, check_root = False)
         rmtree(temp_folder_path)
     
     def test_get_default_network_device(self):
@@ -232,25 +235,29 @@ class AuxiliaryTestMethods():
         from os import stat
         return stat(path).st_mode & 0o7777
 
-    def check_mode_recursive(comparison_method, absolute_path, expected_mode):
-        from os import listdir, path
-        for f in listdir(absolute_path):
-            test_path = path.join(absolute_path, f)
-            comparison_method(AuxiliaryTestMethods.get_st_mode(test_path), expected_mode)
-            if path.isdir(test_path):
-                AuxiliaryTestMethods.check_mode_recursive(comparison_method, test_path, expected_mode)
+    def check_mode_recursive(comparison_method, absolute_path, expected_mode, check_root):
+        from os import walk, path
+        for root, dirs, files in walk(absolute_path):
+            if check_root:
+                comparison_method(AuxiliaryTestMethods.get_st_mode(root), expected_mode)
+            for d in dirs:
+                test_path = path.join(root, d)
+                comparison_method(AuxiliaryTestMethods.get_st_mode(test_path), expected_mode)
+            for f in files:
+                test_path = path.join(root, f)
+                comparison_method(AuxiliaryTestMethods.get_st_mode(test_path), expected_mode)
 
     def listdir_recursive(absolute_path):
-        def listdir_recursive_aux(absolute_path, chars_to_remove, content_array):
-            from os import listdir, path
-            for f in listdir(absolute_path):
-                full_path = path.join(absolute_path, f)
-                content_array.append(full_path[chars_to_remove:])
-                if path.isdir(full_path):
-                    listdir_recursive_aux(full_path, chars_to_remove, content_array)
+        from os import walk, path
         content_array = []
         chars_to_remove = len(absolute_path) + 1
-        listdir_recursive_aux(absolute_path, chars_to_remove, content_array)
+        for root, dirs, files in walk(absolute_path):
+            for d in dirs:
+                relative_path = path.join(root, d)[chars_to_remove:]
+                content_array.append(relative_path)
+            for f in files:
+                relative_path = path.join(root, f)[chars_to_remove:]
+                content_array.append(relative_path)
         return content_array
 
 if __name__ == '__main__':

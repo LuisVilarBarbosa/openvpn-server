@@ -57,6 +57,10 @@ def execute_command(command_array, input_to_subprocess = None, collect_output = 
         output_channel = None
     p = Popen(command_array, stdin = input_channel, stdout = output_channel, stderr = output_channel)
     out, err = p.communicate(input = input_to_subprocess)
+    if out != None:
+        out = out.decode()
+    if err != None:
+        err = err.decode()
     if p.returncode != 0:
         raise CalledProcessError(p.returncode, command_array, out, err)
     return out, err
@@ -81,6 +85,7 @@ def write_file(file_path, text):
 
 def chmod_recursive(path, mode):
     for root, dirs, files in os.walk(path):
+        os.chmod(root, mode)
         for d in dirs:
             os.chmod(os.path.join(root, d), mode)
         for f in files:
@@ -107,7 +112,7 @@ def makedirs(path, mode = 0o777):
 def get_default_network_device():
     from subprocess import check_output
     out, err = execute_command(command_array = ["ip", "route"], collect_output = True)
-    ip_route = str(out)
+    ip_route = out
     ip_route_lines = ip_route.splitlines()
     for line in ip_route_lines:
         if line.find("default") != -1:

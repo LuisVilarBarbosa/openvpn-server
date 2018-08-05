@@ -66,8 +66,11 @@ def execute_command(command_array, input_to_subprocess = None, collect_output = 
     return out, err
 
 def replace_text_in_file(original_string, new_string, file_path):
+    from errors import ReplacementError
     text = read_file(file_path)
     occurrences = text.count(original_string)
+    if occurrences == 0:
+        raise ReplacementError(file_path)
     text = text.replace(original_string, new_string)
     write_file(file_path, text)
     return occurrences

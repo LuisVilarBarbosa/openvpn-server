@@ -106,14 +106,24 @@ class TestMethods(unittest.TestCase):
     
     def test_replace_text_in_file(self):
         from os import remove
+        from errors import ReplacementError
         original_string = "123\n456\n"
-        new_string = original_string + "123\nabc\n"
+        string_to_replace = "56\n"
+        replacement_string = "bc\n789"
+        new_string = "123\n4bc\n789"
         file_path = AuxiliaryTestMethods.create_temp_text_file(original_string)
         self.assertEqual(functions.read_file(file_path), original_string)
         self.assertNotEqual(functions.read_file(file_path), new_string)
-        functions.replace_text_in_file(original_string, new_string, file_path)
+        functions.replace_text_in_file(string_to_replace, replacement_string, file_path)
         self.assertEqual(functions.read_file(file_path), new_string)
         self.assertNotEqual(functions.read_file(file_path), original_string)
+        try:
+            functions.replace_text_in_file(string_to_replace, replacement_string, file_path)
+            self.fail("No exception has been raised.")
+        except ReplacementError as ex:
+            self.assertEqual(ex.file_path, file_path)
+            self.assertEqual(functions.read_file(file_path), new_string)
+            self.assertNotEqual(functions.read_file(file_path), original_string)
         remove(file_path)
     
     def test_read_file(self):

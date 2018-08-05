@@ -108,9 +108,9 @@ def main():
         server_conf_path = "/etc/openvpn/" + configuration_variables.SERVER_NAME + ".conf"
         shutil.copy2("/usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz", server_conf_path + ".gz")
         ui.decompress_gzip_file(server_conf_path + ".gz")
-        if ui.replace_text_in_file(";tls-auth ta.key 0 # This file is secret", "tls-auth ta_" + configuration_variables.SERVER_NAME + ".key 0 # This file is secret\nkey-direction 0", server_conf_path) == 0:
+        if ui.try_replace_text_in_file(";tls-auth ta.key 0 # This file is secret", "tls-auth ta_" + configuration_variables.SERVER_NAME + ".key 0 # This file is secret\nkey-direction 0", server_conf_path) == 0:
             ui.replace_text_in_file("tls-auth ta.key 0 # This file is secret", "tls-auth ta_" + configuration_variables.SERVER_NAME + ".key 0 # This file is secret\nkey-direction 0", server_conf_path)
-        if ui.replace_text_in_file(";cipher AES-128-CBC   # AES", "cipher AES-256-CBC   # AES\nauth SHA256", server_conf_path) == 0:
+        if ui.try_replace_text_in_file(";cipher AES-128-CBC   # AES", "cipher AES-256-CBC   # AES\nauth SHA256", server_conf_path) == 0:
             ui.replace_text_in_file("cipher AES-256-CBC", "cipher AES-256-CBC\nauth SHA256", server_conf_path)
         ui.replace_text_in_file("ca ca.crt", "ca ca_" + configuration_variables.SERVER_NAME + ".crt", server_conf_path)
         ui.replace_text_in_file("dh dh2048.pem", "dh dh_" + configuration_variables.SERVER_NAME + ".pem", server_conf_path)

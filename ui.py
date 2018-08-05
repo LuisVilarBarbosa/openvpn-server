@@ -33,7 +33,19 @@ def execute_command(command_array, input_to_subprocess = None, collect_output = 
         quit()
 
 def replace_text_in_file(original_string, new_string, file_path):
-    return functions.replace_text_in_file(original_string, new_string, file_path)
+    from errors import ReplacementError
+    try:
+        return functions.replace_text_in_file(original_string, new_string, file_path)
+    except ReplacementError as ex:
+        print("Error: No text has been replaced on '" + ex.file_path + "'.")
+        quit()
+
+def try_replace_text_in_file(original_string, new_string, file_path):
+    from errors import ReplacementError
+    try:
+        return functions.replace_text_in_file(original_string, new_string, file_path)
+    except ReplacementError:
+        return 0
 
 def read_file(file_path):
     return functions.read_file(file_path)

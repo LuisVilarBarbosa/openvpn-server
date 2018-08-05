@@ -124,8 +124,7 @@ SERVER_ADDRESSES_ARRAY = ["example.com", "127.0.0.1"]
 SERVER_PORTS_FOR_CLIENT_ARRAY = ["1194", "1194"]
 
 # The ability for OpenVPN clients to choose randomly the
-# server to which they will connect.
-# This is useful to distribute the load between several
-# servers or addresses.
+# address to which they will connect.
+# This is useful to distribute the load between several addresses.
 # Indicate 'yes' to enable the option or indicate 'no' otherwise.
 ENABLE_REMOTE_RANDOM = "no"

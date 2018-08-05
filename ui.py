@@ -38,6 +38,7 @@ def replace_text_in_file(original_string, new_string, file_path):
         return functions.replace_text_in_file(original_string, new_string, file_path)
     except ReplacementError as ex:
         print("Error: No text has been replaced on '" + ex.file_path + "'.")
+        print("Please, report this situation.")
         quit()
 
 def try_replace_text_in_file(original_string, new_string, file_path):

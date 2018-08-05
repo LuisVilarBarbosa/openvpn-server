@@ -106,8 +106,7 @@ def validate_server_ports_for_client_array():
         print("The number of server addresses should be equal to the number of server ports.")
         quit()
     for server_port in configuration_variables.SERVER_PORTS_FOR_CLIENT_ARRAY:
-        if not functions.is_valid_port(server_port):
-            quit()
+        ui.is_valid_port(server_port)
 
 def validate_enable_remote_random():
     configuration_variables.ENABLE_REMOTE_RANDOM = configuration_variables.ENABLE_REMOTE_RANDOM.lower()

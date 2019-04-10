@@ -36,8 +36,16 @@ OPENVPN_SUBNET = "10.8.0.0"
 OPENVPN_SUBNET_MASK = "255.255.255.0"
 OPENVPN_SUBNET_MASK_IN_BITS = "24"
 
+# The ability to force all traffic to be redirected through
+# the OpenVPN.
+# Indicate 'yes' to redirect all traffic or indicate 'no'
+# otherwise.
+REDIRECT_ALL_TRAFFIC = "yes"
+
 # The ability to block outside DNS servers on the client and
 # only allow those provided by the OpenVPN server.
+# If REDIRECT_ALL_TRAFFIC is set to 'no', this option should
+# also be set to 'no'.
 # Indicate 'yes' to block outside DNS servers or indicate 'no'
 # otherwise.
 BYPASS_DNS = "yes"

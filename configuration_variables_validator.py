@@ -11,6 +11,7 @@ def validate_configuration_variables():
     validate_server_protocol()
     validate_openvpn_subnet()
     validate_openvpn_subnet_mask()
+    validate_redirect_all_traffic()
     validate_bypass_dns()
     validate_dns_servers_array()
     validate_allow_client_to_client()
@@ -47,9 +48,18 @@ def validate_openvpn_subnet_mask():
         print("Invalid subnet mask: " + configuration_variables.OPENVPN_SUBNET_MASK)
         quit()
 
+def validate_redirect_all_traffic():
+    if not functions.matches_regex("^(yes|no)$", configuration_variables.REDIRECT_ALL_TRAFFIC):
+        print("Invalid 'redirect-all-traffic' option: " + configuration_variables.REDIRECT_ALL_TRAFFIC)
+        quit()
+
 def validate_bypass_dns():
     if not functions.matches_regex("^(yes|no)$", configuration_variables.BYPASS_DNS):
         print("Invalid 'bypass-dns' option: " + configuration_variables.BYPASS_DNS)
+        quit()
+    if configuration_variables.REDIRECT_ALL_TRAFFIC == "no" and configuration_variables.BYPASS_DNS != "no":
+        print("Invalid 'bypass-dns' option: " + configuration_variables.BYPASS_DNS)
+        print("The 'bypass-dns' option must be disabled when not redirecting all traffic.")
         quit()
 
 def validate_dns_servers_array():

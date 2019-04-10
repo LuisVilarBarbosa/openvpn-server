@@ -98,6 +98,8 @@ def main():
                   ui.execute_command(["./easyrsa", "gen-req", client, "nopass"], "\n")
             elif enable_password == "yes":
                   ui.execute_command(["./easyrsa", "gen-req", client], "\n")
+            else:
+                raise Exception("This statement shouldn't be reached.")
             shutil.copy2("pki/private/" + client + ".key", client_keys_dir + "/")
             ui.execute_command(["./easyrsa", "sign-req", "client", client], "yes\n")
             shutil.copy2("pki/issued/" + client + ".crt", client_keys_dir + "/")
@@ -118,10 +120,14 @@ def main():
         ui.replace_text_in_file(";group nogroup", "group nogroup", server_conf_path)
 
         ## (Optional) Push DNS Changes to Redirect All Traffic Through the VPN
-        if configuration_variables.BYPASS_DNS == "yes":
+        if configuration_variables.REDIRECT_ALL_TRAFFIC == "yes" and configuration_variables.BYPASS_DNS == "yes":
             ui.replace_text_in_file(";push \"redirect-gateway def1 bypass-dhcp\"", "push \"redirect-gateway def1 bypass-dhcp bypass-dns\"", server_conf_path)
-        elif configuration_variables.BYPASS_DNS == "no":
+        elif configuration_variables.REDIRECT_ALL_TRAFFIC == "yes" and configuration_variables.BYPASS_DNS == "no":
             ui.replace_text_in_file(";push \"redirect-gateway def1 bypass-dhcp\"", "push \"redirect-gateway def1 bypass-dhcp\"", server_conf_path)
+        elif configuration_variables.REDIRECT_ALL_TRAFFIC == "no" and configuration_variables.BYPASS_DNS == "yes":
+            raise Exception("This statement shouldn't be reached.")
+        elif configuration_variables.REDIRECT_ALL_TRAFFIC == "no" and configuration_variables.BYPASS_DNS == "no":
+            pass
         dhcp_option_dns_full = ""
         for dns_server in configuration_variables.DNS_SERVERS_ARRAY:
             dhcp_option_dns_part = "push \"dhcp-option DNS " + dns_server + "\"\n"

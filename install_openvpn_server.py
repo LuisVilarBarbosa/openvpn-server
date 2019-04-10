@@ -148,7 +148,8 @@ def main():
             ui.replace_text_in_file(";duplicate-cn", "duplicate-cn", server_conf_path)
 
         # Step 6 — Adjusting the Server Networking Configuration
-        ui.replace_text_in_file("#net.ipv4.ip_forward=1", "net.ipv4.ip_forward=1", "/etc/sysctl.conf")
+        if not "net.ipv4.ip_forward=1" in ui.read_file("/etc/sysctl.conf").splitlines():
+            ui.replace_text_in_file("#net.ipv4.ip_forward=1", "net.ipv4.ip_forward=1", "/etc/sysctl.conf")
         ui.execute_command(["sysctl", "-p"])
         shutil.copy2(auxiliary_files_path + "/before.rules", installation_dir + "/")
         ui.replace_text_in_file("10.8.0.0/8", configuration_variables.OPENVPN_SUBNET + "/" + configuration_variables.OPENVPN_SUBNET_MASK_IN_BITS, installation_dir + "/before.rules")
@@ -157,7 +158,8 @@ def main():
         before_rules_to_add = ui.read_file(installation_dir + "/before.rules")
         if not before_rules_to_add in ui.read_file("/etc/ufw/before.rules"):
             ui.replace_text_in_file("# Don't delete these required lines, otherwise there will be errors", before_rules_to_add + "\n\n# Don't delete these required lines, otherwise there will be errors", "/etc/ufw/before.rules")
-        ui.replace_text_in_file("DEFAULT_FORWARD_POLICY=\"DROP\"", "DEFAULT_FORWARD_POLICY=\"ACCEPT\"", "/etc/default/ufw")
+        if not "DEFAULT_FORWARD_POLICY=\"ACCEPT\"" in ui.read_file("/etc/default/ufw").splitlines():
+            ui.replace_text_in_file("DEFAULT_FORWARD_POLICY=\"DROP\"", "DEFAULT_FORWARD_POLICY=\"ACCEPT\"", "/etc/default/ufw")
         ui.execute_command(["ufw", configuration_variables.FIREWALL_MODE, configuration_variables.SERVER_PORT + "/" + configuration_variables.SERVER_PROTOCOL])
         ui.execute_command(["ufw", configuration_variables.FIREWALL_MODE, "OpenSSH"])
         ui.execute_command(["ufw", "disable"])
@@ -185,7 +187,7 @@ def main():
         ui.replace_text_in_file("ca ca.crt", "#ca ca.crt", base_conf_path)
         ui.replace_text_in_file("cert client.crt", "#cert client.crt", base_conf_path)
         ui.replace_text_in_file("key client.key", "#key client.key", base_conf_path)
-        if ui.replace_text_in_file(";cipher x", "cipher AES-256-CBC\nauth SHA256\nkey-direction 1", base_conf_path) == 0:
+        if ui.try_replace_text_in_file(";cipher x", "cipher AES-256-CBC\nauth SHA256\nkey-direction 1", base_conf_path) == 0:
             ui.replace_text_in_file("cipher AES-256-CBC", "cipher AES-256-CBC\nauth SHA256\nkey-direction 1", base_conf_path)
         ui.replace_text_in_file("key-direction 1", "key-direction 1\n# script-security 2\n# up /etc/openvpn/update-resolv-conf\n# down /etc/openvpn/update-resolv-conf", base_conf_path)
         shutil.copy2(auxiliary_files_path + "/make_config.sh", client_configs_dir + "/make_config.sh")
